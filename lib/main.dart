@@ -56,7 +56,6 @@ class _SplashScreenState extends State<SplashScreen>
                 final t = _controller.value * 2 * math.pi;
                 return Stack(
                   children: [
-                    // ─── плаваючі кольорові плями (легкий дрейф у пікселях) ───
                     _cornerBlob(
                       color: const Color(0xFFAED4FA), // blue → лівий верх
                       size: 620,
