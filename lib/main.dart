@@ -34,7 +34,7 @@ class _SplashScreenState extends State<SplashScreen>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 16),
-    )..repeat(); // нескінченний цикл
+    )..repeat();
   }
 
   @override
