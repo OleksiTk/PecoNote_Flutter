@@ -2,6 +2,11 @@
 
 A new Flutter project.
 
+## Project Guidelines
+
+Architecture and development guidelines are documented in
+[docs/project_guidelines.md](docs/project_guidelines.md).
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.

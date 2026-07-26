@@ -1,15 +1,25 @@
-import 'package:flutter_test/flutter_test.dart';
+import 'dart:async';
 
-import 'package:peconote_mobile/main.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:peconote_mobile/app/peco_note_app.dart';
+import 'package:peconote_mobile/features/startup/application/controllers/startup_controller.dart';
+import 'package:peconote_mobile/features/startup/application/providers/startup_providers.dart';
 
 void main() {
   testWidgets('Splash screen shows the pecoNote wordmark', (tester) async {
-    await tester.pumpWidget(const PecoNoteApp());
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          startupControllerProvider.overrideWith(
+            (ref) => Completer<StartupDestination>().future,
+          ),
+        ],
+        child: const PecoNoteApp(),
+      ),
+    );
 
     expect(find.text('FINANCE, SOFTLY'), findsOneWidget);
-
-    // Let the splash screen's auto-navigation timer fire so it doesn't leak
-    // past the end of the test.
-    await tester.pump(const Duration(milliseconds: 2300));
   });
 }
