@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +14,7 @@ import '../../application/providers/auth_providers.dart';
 
 const _textColor = Color(0xFF3B4358);
 const _grayText = Color(0xFF7A8296);
+const _accentBlue = Color(0xFF5B7FB9);
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -81,14 +83,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 'Welcome back',
                 style: TextStyle(
                   fontSize: 26,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w900,
                   color: _textColor,
                 ),
               ),
               const SizedBox(height: 8),
               const Text(
                 'Sign in to your PecoNote account.',
-                style: TextStyle(fontSize: 13, color: _grayText),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: _grayText,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: 26),
               AppTextField(
@@ -119,7 +125,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF5B7FB9),
+                        color: _accentBlue,
                       ),
                     ),
                   ),
@@ -138,13 +144,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               PillButton(
                 label: _loading ? 'Signing in…' : 'Sign in',
                 onPressed: _loading ? null : () => unawaited(_signIn()),
+                backgroundColor: _accentBlue,
+                foregroundColor: Colors.white,
               ),
               const SizedBox(height: 16),
-              TextLinkRow(
-                prefix: 'New here?',
-                linkLabel: 'Create account',
-                onTap: () => context.goNamed(AppRoute.register.name),
+
+              Container(
+                alignment: Alignment.center,
+                child: Text.rich(
+                  TextSpan(
+                    text: 'New here?',
+                    style: const TextStyle(color: Colors.grey, fontSize: 14),
+                    children: [
+                      const WidgetSpan(child: SizedBox(width: 5)),
+
+                      TextSpan(
+                        text: 'Create account',
+                        style: const TextStyle(
+                          color: _accentBlue,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () =>
+                              context.goNamed(AppRoute.register.name),
+                      ),
+                    ],
+                  ),
+                ),
               ),
+
               const SizedBox(height: 24),
             ],
           ),

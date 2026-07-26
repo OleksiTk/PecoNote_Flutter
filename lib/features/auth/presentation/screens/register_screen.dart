@@ -13,6 +13,7 @@ import '../../application/providers/auth_providers.dart';
 
 const _textColor = Color(0xFF3B4358);
 const _grayText = Color(0xFF7A8296);
+const _accentBlue = Color(0xFF5B7FB9);
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -112,14 +113,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 'Create account',
                 style: TextStyle(
                   fontSize: 26,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w900,
                   color: _textColor,
                 ),
               ),
               const SizedBox(height: 8),
               const Text(
                 'A minute of setup, years of calm.',
-                style: TextStyle(fontSize: 13, color: _grayText),
+                style: TextStyle(
+                  fontSize: 15,
+                  color: _grayText,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 24),
               AppTextField(
@@ -173,6 +178,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               PillButton(
                 label: _loading ? 'Creating account…' : 'Continue',
                 onPressed: _loading ? null : () => unawaited(_register()),
+                backgroundColor: _accentBlue,
+                foregroundColor: Colors.white,
               ),
               const SizedBox(height: 16),
               TextLinkRow(

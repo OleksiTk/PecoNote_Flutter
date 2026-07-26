@@ -6,15 +6,25 @@ import 'package:flutter/material.dart';
 /// [vivid] — насичені плями у всіх чотирьох кутках (сплеш, вибір способу входу).
 /// Не-[vivid] ("м'який") варіант притлумлює верхні плями, лишаючи верх майже
 /// білим під заголовки й картки, а кольоровий "серпанок" концентрує знизу.
+///
+/// Кожна пляма рухається по еліпсу за спільною формулою:
+///   dx(t) = travelX · sin(2π·t/T + φ)
+///   dy(t) = travelY · cos(2π·t/T + φ)
+/// Усі чотири плями мають один період [period] (T), але зсунуті по фазі
+/// на 90° (π/2) одна від одної — тому рух ніколи не синхронізується й не
+/// "стрибає". Якщо система просить менше анімації (accessibility →
+/// reduce motion), плями завмирають на t=0.
 class GradientBackground extends StatefulWidget {
   const GradientBackground({
     super.key,
     required this.child,
     this.vivid = false,
+    this.period = const Duration(seconds: 22),
   });
 
   final Widget child;
   final bool vivid;
+  final Duration period;
 
   @override
   State<GradientBackground> createState() => _GradientBackgroundState();
@@ -22,15 +32,33 @@ class GradientBackground extends StatefulWidget {
 
 class _GradientBackgroundState extends State<GradientBackground>
     with SingleTickerProviderStateMixin {
+  static const _travelX = 26.0;
+  static const _travelY = 32.0;
+  static const _phaseStep = math.pi / 2; // 90° between layers
+
   late final AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 16),
-    )..repeat();
+    _controller = AnimationController(vsync: this, duration: widget.period);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncMotion();
+  }
+
+  void _syncMotion() {
+    final reduceMotion = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    if (reduceMotion) {
+      _controller
+        ..stop()
+        ..value = 0;
+    } else if (!_controller.isAnimating) {
+      _controller.repeat();
+    }
   }
 
   @override
@@ -63,8 +91,8 @@ class _GradientBackgroundState extends State<GradientBackground>
                       opacity: topOpacity,
                       top: true,
                       left: true,
-                      dx: 26 * math.sin(t),
-                      dy: 32 * math.cos(t * 0.8),
+                      dx: _travelX * math.sin(t),
+                      dy: _travelY * math.cos(t),
                     ),
                     _cornerBlob(
                       color: const Color(0xFFFFD3BC), // orange → правий верх
@@ -72,8 +100,8 @@ class _GradientBackgroundState extends State<GradientBackground>
                       opacity: topOpacity,
                       top: true,
                       left: false,
-                      dx: 26 * math.cos(t * 0.9 + 1.0),
-                      dy: 32 * math.sin(t * 0.7 + 1.0),
+                      dx: _travelX * math.sin(t + _phaseStep),
+                      dy: _travelY * math.cos(t + _phaseStep),
                     ),
                     _cornerBlob(
                       color: const Color(0xFFB4E8CE), // green → правий низ
@@ -81,8 +109,8 @@ class _GradientBackgroundState extends State<GradientBackground>
                       opacity: 1.0,
                       top: false,
                       left: false,
-                      dx: 26 * math.sin(t * 0.6 + 2.0),
-                      dy: 32 * math.cos(t + 2.0),
+                      dx: _travelX * math.sin(t + 2 * _phaseStep),
+                      dy: _travelY * math.cos(t + 2 * _phaseStep),
                     ),
                     _cornerBlob(
                       color: const Color(0xFFF6C7DE), // pink → лівий низ
@@ -90,8 +118,8 @@ class _GradientBackgroundState extends State<GradientBackground>
                       opacity: 1.0,
                       top: false,
                       left: true,
-                      dx: 26 * math.cos(t * 0.7 + 3.0),
-                      dy: 32 * math.sin(t * 0.9 + 3.0),
+                      dx: _travelX * math.sin(t + 3 * _phaseStep),
+                      dy: _travelY * math.cos(t + 3 * _phaseStep),
                     ),
                   ],
                 );

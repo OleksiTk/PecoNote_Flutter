@@ -86,7 +86,7 @@ class _StartChoiceScreenState extends ConsumerState<StartChoiceScreen> {
                 iconColor: const Color(0xFFC1602E),
                 title: 'Try the demo',
                 subtitle: 'Look around with sample data first.',
-                onTap: () => _selectAndContinue(context, 'Try the demo'),
+                onTap: () => context.goNamed(AppRoute.home.name),
               ),
             ],
           ),

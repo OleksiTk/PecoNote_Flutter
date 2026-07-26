@@ -7,7 +7,8 @@ enum AppRoute {
   forgotPassword('/auth/forgot-password'),
   resetPassword('/reset-password'),
   startChoice('/start'),
-  ready('/ready');
+  ready('/ready'),
+  home('/home');
 
   const AppRoute(this.path);
 

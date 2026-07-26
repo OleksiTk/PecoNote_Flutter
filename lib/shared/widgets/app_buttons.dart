@@ -23,53 +23,50 @@ class PillButton extends StatelessWidget {
   final Widget? leading;
 
   @override
+  @override
+  @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    final enabled = onPressed != null;
+    return Container(
       width: double.infinity,
-      height: 50,
+      height: 60,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(99),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6E87B4).withValues(alpha: 0.16),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(99),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-          child: Material(
-            color: backgroundColor.withValues(
-              alpha: onPressed == null ? 0.32 : 0.62,
-            ),
-            child: InkWell(
-              onTap: onPressed,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(99),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.85),
+        child: Material(
+          color: enabled
+              ? backgroundColor
+              : backgroundColor.withValues(alpha: 0.5),
+          child: InkWell(
+            onTap: onPressed,
+            child: Container(
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(99),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.85)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (leading != null) ...[leading!, const SizedBox(width: 10)],
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: foregroundColor,
+                    ),
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(
-                        0xFF6E87B4,
-                      ).withValues(alpha: 0.16),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (leading != null) ...[
-                      leading!,
-                      const SizedBox(width: 10),
-                    ],
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: foregroundColor,
-                      ),
-                    ),
-                  ],
-                ),
+                ],
               ),
             ),
           ),
@@ -165,15 +162,19 @@ class GlassBackButton extends StatelessWidget {
           child: InkWell(
             onTap: onPressed,
             child: Container(
-          width: 34,
-          height: 34,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.45),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.65)),
-          ),
-          child: const Icon(Icons.chevron_left, size: 20, color: _textColor),
+              width: 34,
+              height: 34,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.45),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.65)),
+              ),
+              child: const Icon(
+                Icons.chevron_left,
+                size: 20,
+                color: _textColor,
+              ),
             ),
           ),
         ),

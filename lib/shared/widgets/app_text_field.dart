@@ -37,78 +37,90 @@ class _AppTextFieldState extends State<AppTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.45),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.70)),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6E87B4).withValues(alpha: 0.10),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
           ),
-          child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.72), // було 0.45
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.9),
+              ), // було 0.70
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Row(
               children: [
-                Text(
-                  widget.label,
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF98A0B5),
-                    letterSpacing: 0.6,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.label,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF98A0B5),
+                          letterSpacing: 0.6,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      TextField(
+                        controller: widget.controller,
+                        enabled: widget.enabled,
+                        obscureText: widget.obscurable && _obscured,
+                        keyboardType: widget.keyboardType,
+                        textInputAction: widget.textInputAction,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: _textColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        decoration: InputDecoration(
+                          isDense: true,
+                          border: InputBorder.none,
+                          hintText: widget.hintText,
+                          hintStyle: TextStyle(color: _textColor),
+                        ),
+                      ),
+                      if (widget.errorText != null) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          widget.errorText!,
+                          style: const TextStyle(
+                            color: Color(0xFFB3261E),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                const SizedBox(height: 4),
-                TextField(
-                  controller: widget.controller,
-                  enabled: widget.enabled,
-                  obscureText: widget.obscurable && _obscured,
-                  keyboardType: widget.keyboardType,
-                  textInputAction: widget.textInputAction,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: _textColor,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  decoration: InputDecoration(
-                    isDense: true,
-                    border: InputBorder.none,
-                    hintText: widget.hintText,
-                    hintStyle: TextStyle(
-                      color: _textColor.withValues(alpha: 0.35),
+                if (widget.obscurable)
+                  GestureDetector(
+                    onTap: () => setState(() => _obscured = !_obscured),
+                    child: Icon(
+                      _obscured
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      size: 20,
+                      color: const Color(0xFF98A0B5),
                     ),
                   ),
-                ),
-                if (widget.errorText != null) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    widget.errorText!,
-                    style: const TextStyle(
-                      color: Color(0xFFB3261E),
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
               ],
             ),
-          ),
-          if (widget.obscurable)
-            GestureDetector(
-              onTap: () => setState(() => _obscured = !_obscured),
-              child: Icon(
-                _obscured
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined,
-                size: 20,
-                color: const Color(0xFF98A0B5),
-              ),
-            ),
-        ],
           ),
         ),
       ),
