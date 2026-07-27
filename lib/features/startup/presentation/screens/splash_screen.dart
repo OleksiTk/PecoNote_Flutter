@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/theme/app_colors.dart';
 import '../../../../shared/widgets/app_logo.dart';
 import '../../../../shared/widgets/gradient_background.dart';
 import '../../application/controllers/startup_controller.dart';
@@ -53,7 +54,7 @@ class _SplashContent extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w400,
-                color: Color(0xFF8A93AC),
+                color: AppColors.grayTextLight,
                 letterSpacing: 2.5,
               ),
             ),
@@ -66,8 +67,10 @@ class _SplashContent extends StatelessWidget {
                   width: 120,
                   height: 4,
                   child: LinearProgressIndicator(
-                    backgroundColor: Colors.white.withValues(alpha: 0.7),
-                    valueColor: const AlwaysStoppedAnimation(Color(0xFF8FA8D6)),
+                    backgroundColor: AppColors.white.withValues(alpha: 0.7),
+                    valueColor: const AlwaysStoppedAnimation(
+                      AppColors.progressBlue,
+                    ),
                   ),
                 ),
               ),

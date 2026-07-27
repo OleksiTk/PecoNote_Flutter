@@ -2,23 +2,23 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-const _textColor = Color(0xFF3B4358);
-const _accentBlue = Color(0xFF3D6FE5);
+import '../../app/theme/app_colors.dart';
 
-/// Повноширинна кнопка-пігулка з м'якою тінню (Next / Get started / Continue).
 class PillButton extends StatelessWidget {
   const PillButton({
     super.key,
     required this.label,
     required this.onPressed,
-    this.backgroundColor = Colors.white,
-    this.foregroundColor = _textColor,
+    this.backgroundColor = AppColors.white,
+    this.foregroundColor = AppColors.textDark,
+    this.borderColor = AppColors.balanceGradientEnd,
     this.leading,
   });
 
   final String label;
   final VoidCallback? onPressed;
   final Color backgroundColor;
+  final Color borderColor;
   final Color foregroundColor;
   final Widget? leading;
 
@@ -34,7 +34,7 @@ class PillButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(99),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF6E87B4).withValues(alpha: 0.16),
+            color: AppColors.shadowBlue.withValues(alpha: 0.16),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -52,7 +52,9 @@ class PillButton extends StatelessWidget {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(99),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.85)),
+                border: Border.all(
+                  color: enabled ? borderColor : AppColors.accentBlueMuted,
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -76,7 +78,6 @@ class PillButton extends StatelessWidget {
   }
 }
 
-/// Текстове посилання по центру: звичайний текст + виділений синій сегмент.
 class TextLinkRow extends StatelessWidget {
   const TextLinkRow({
     super.key,
@@ -99,7 +100,7 @@ class TextLinkRow extends StatelessWidget {
           text: TextSpan(
             style: const TextStyle(
               fontSize: 14,
-              color: Color(0xFF8A93A8),
+              color: AppColors.grayTextLight,
               fontWeight: FontWeight.w500,
             ),
             children: [
@@ -107,7 +108,7 @@ class TextLinkRow extends StatelessWidget {
               TextSpan(
                 text: linkLabel,
                 style: const TextStyle(
-                  color: _accentBlue,
+                  color: AppColors.accentBlue,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -119,7 +120,6 @@ class TextLinkRow extends StatelessWidget {
   }
 }
 
-/// Одноколірне клікабельне посилання по центру (без виділеного сегмента).
 class PlainLinkText extends StatelessWidget {
   const PlainLinkText({super.key, required this.label, required this.onTap});
 
@@ -136,8 +136,8 @@ class PlainLinkText extends StatelessWidget {
           label,
           style: const TextStyle(
             fontSize: 14,
-            color: _accentBlue,
-            fontWeight: FontWeight.w600,
+            color: AppColors.accentBlueMuted,
+            fontWeight: FontWeight.w800,
           ),
         ),
       ),
@@ -145,7 +145,6 @@ class PlainLinkText extends StatelessWidget {
   }
 }
 
-/// Кругла кнопка "назад" у скляному стилі (шеврон вліво).
 class GlassBackButton extends StatelessWidget {
   const GlassBackButton({super.key, required this.onPressed});
 
@@ -154,7 +153,7 @@ class GlassBackButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.transparent,
+      color: AppColors.transparent,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: BackdropFilter(
@@ -166,14 +165,16 @@ class GlassBackButton extends StatelessWidget {
               height: 34,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.45),
+                color: AppColors.white.withValues(alpha: 0.45),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.65)),
+                border: Border.all(
+                  color: AppColors.white.withValues(alpha: 0.65),
+                ),
               ),
               child: const Icon(
                 Icons.chevron_left,
                 size: 20,
-                color: _textColor,
+                color: AppColors.textDark,
               ),
             ),
           ),

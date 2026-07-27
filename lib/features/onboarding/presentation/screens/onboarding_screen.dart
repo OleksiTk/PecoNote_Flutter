@@ -1,17 +1,16 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/theme/app_colors.dart';
 import '../../../../core/storage/app_settings_repository.dart';
 import '../../../../shared/widgets/app_buttons.dart';
 import '../../../../shared/widgets/app_logo.dart';
 import '../../../../shared/widgets/gradient_background.dart';
-
-const _textColor = Color(0xFF3B4358);
-const _grayText = Color(0xFF7A8296);
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -58,9 +57,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     child: const Text(
                       'Skip',
                       style: TextStyle(
-                        color: _grayText,
+                        color: AppColors.grayText,
                         fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ),
@@ -92,6 +91,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 28),
               child: PillButton(
+                backgroundColor: AppColors.accentBlueMuted,
+                foregroundColor: AppColors.white,
                 label: _page == _pageCount - 1 ? 'Get started' : 'Next',
                 onPressed: () {
                   if (_page == _pageCount - 1) {
@@ -137,23 +138,30 @@ class _ValuePage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const SizedBox(height: 20),
-          SizedBox(height: 320, child: illustration),
+          SizedBox(height: 400, child: illustration),
           const SizedBox(height: 12),
+          const Spacer(),
           Text(
             headline,
             style: const TextStyle(
               fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: _textColor,
+              fontWeight: FontWeight.w900,
+              color: AppColors.textDark,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 10),
           Text(
             subtext,
-            style: const TextStyle(fontSize: 13, height: 1.6, color: _grayText),
+            style: const TextStyle(
+              fontSize: 13,
+              height: 1.6,
+              color: AppColors.grayText,
+              fontWeight: FontWeight.w600,
+            ),
             textAlign: TextAlign.center,
           ),
+          const SizedBox(height: 24),
         ],
       ),
     );
@@ -178,7 +186,7 @@ class _Dots extends StatelessWidget {
           width: active ? 18 : 6,
           height: 6,
           decoration: BoxDecoration(
-            color: active ? const Color(0xFF6C7BE0) : const Color(0xFFD8DEEA),
+            color: active ? AppColors.accentBlueMuted : AppColors.dotInactive,
             borderRadius: BorderRadius.circular(3),
           ),
         );
@@ -194,21 +202,21 @@ class _CategoriesIllustration extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        Positioned(
+        const Positioned(
           right: 10,
           top: 0,
-          child: _Chip(icon: Icons.celebration_outlined, label: 'Fun'),
+          child: _Chip(emoji: '🎮', label: 'Fun'),
         ),
         const Positioned(
           left: 0,
           top: 60,
-          child: _Chip(icon: Icons.directions_car_outlined, label: 'Transport'),
+          child: _Chip(emoji: '🏠', label: 'Transport'),
         ),
         Positioned(left: 0, right: 0, top: 130, child: _TransactionCard()),
         const Positioned(
-          left: 50,
-          top: 290,
-          child: _Chip(icon: Icons.local_cafe_outlined, label: 'Cafés'),
+          right: 20,
+          top: 320,
+          child: _Chip(emoji: '☕️', label: 'Cafés'),
         ),
       ],
     );
@@ -216,40 +224,59 @@ class _CategoriesIllustration extends StatelessWidget {
 }
 
 class _Chip extends StatelessWidget {
-  const _Chip({required this.icon, required this.label});
+  const _Chip({this.icon, this.emoji, required this.label})
+    : assert(icon != null || emoji != null, 'Потрібен icon або emoji');
 
-  final IconData icon;
+  final IconData? icon;
+  final String? emoji;
   final String label;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.85),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(99),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF6E87B4).withValues(alpha: 0.12),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: AppColors.shadowBlue.withValues(alpha: 0.12),
+            blurRadius: 14,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: _textColor),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: _textColor,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(99),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.white.withValues(alpha: 0.55),
+              borderRadius: BorderRadius.circular(99),
+              border: Border.all(
+                color: AppColors.white.withValues(alpha: 0.70),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (emoji != null)
+                  Text(emoji!, style: const TextStyle(fontSize: 16))
+                else
+                  Icon(icon, size: 16, color: AppColors.textDark),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textDark,
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -261,74 +288,95 @@ class _TransactionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.85),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF6E87B4).withValues(alpha: 0.12),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            color: AppColors.shadowBlue.withValues(alpha: 0.14),
+            blurRadius: 26,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFE1CC),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.shopping_bag_outlined,
-                  size: 20,
-                  color: Color(0xFFB5651D),
-                ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+          child: Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: AppColors.white.withValues(alpha: 0.45),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: AppColors.white.withValues(alpha: 0.65),
               ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+            child: Column(
+              children: [
+                Row(
                   children: [
-                    Text(
-                      'SILPO',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: _textColor,
+                    // Іконка мерчанта — щільніше скло, майже біла плитка.
+                    Container(
+                      width: 44,
+                      height: 44,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: AppColors.white.withValues(alpha: 0.75),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: AppColors.white.withValues(alpha: 0.8),
+                        ),
+                      ),
+                      child: const Text('🍞', style: TextStyle(fontSize: 20)),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'SILPO',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textDark,
+                            ),
+                          ),
+                          SizedBox(height: 2),
+                          Text(
+                            'yesterday',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.grayText,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    Text(
-                      'yesterday',
-                      style: TextStyle(fontSize: 12, color: _grayText),
+                    const Text(
+                      '−₴ 486',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textDark,
+                      ),
                     ),
                   ],
                 ),
-              ),
-              const Text(
-                '-₴486',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: _textColor,
+                const SizedBox(height: 16),
+                const Row(
+                  children: [
+                    _SubChip(label: 'Food', selected: true),
+                    SizedBox(width: 8),
+                    _SubChip(label: 'Cafés'),
+                    SizedBox(width: 8),
+                    _SubChip(label: 'Other…'),
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: const [
-              _SubChip(label: 'Food', selected: true),
-              SizedBox(width: 8),
-              _SubChip(label: 'Cafés'),
-              SizedBox(width: 8),
-              _SubChip(label: 'Other…'),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -343,18 +391,20 @@ class _SubChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: selected ? const Color(0xFFC9F0DA) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: selected ? null : Border.all(color: const Color(0xFFE7EAF2)),
+        color: selected
+            ? AppColors.chipSelectedBg
+            : AppColors.white.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(99),
+        border: selected ? null : Border.all(color: AppColors.subChipBorder),
       ),
       child: Text(
         selected ? '✓ $label' : label,
         style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: selected ? const Color(0xFF2E8B57) : _grayText,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: selected ? AppColors.success : AppColors.grayText,
         ),
       ),
     );
@@ -369,21 +419,23 @@ class _SyncIllustration extends StatelessWidget {
     return Column(
       children: [
         _FlowCard(
-          iconBg: const Color(0xFFD6E6FF),
-          icon: Icons.account_balance_outlined,
-          iconColor: const Color(0xFF3D6FE5),
+          iconBg: AppColors.accentBlueBg,
+          emoji: '🏦',
           title: 'Monobank',
           subtitle: '14 new payments',
           trailing: const Text(
             'auto',
-            style: TextStyle(fontSize: 12, color: _grayText),
+            style: TextStyle(
+              fontSize: 12,
+              color: AppColors.success,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
-        const Icon(Icons.arrow_downward, color: _grayText, size: 18),
+        const _FlowArrow(length: 28),
         _FlowCard(
-          iconBg: const Color(0xFFD9F2E3),
-          icon: Icons.rule_outlined,
-          iconColor: const Color(0xFF2E8B57),
+          iconBg: AppColors.iconBgMintLight,
+          emoji: '⚙️',
           title: 'Your rules',
           subtitle: '"SILPO → Food", 11 more',
           trailing: const Text(
@@ -391,18 +443,18 @@ class _SyncIllustration extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF2E8B57),
+              color: AppColors.success,
             ),
           ),
         ),
-        const Icon(Icons.arrow_downward, color: _grayText, size: 18),
+        const _FlowArrow(length: 28),
         _FlowCard(
-          iconBg: const Color(0xFFFFE7CE),
-          icon: Icons.lightbulb_outline,
-          iconColor: const Color(0xFFC17A2E),
+          iconBg: AppColors.iconBgOrange,
+          emoji: '🏷️',
           title: 'Asks you',
           subtitle: 'only 1 unclear payment',
-          subtitleColor: const Color(0xFFC17A2E),
+          cardTint: AppColors.blobOrange,
+          subtitleColor: AppColors.iconFgOrange,
         ),
       ],
     );
@@ -412,75 +464,140 @@ class _SyncIllustration extends StatelessWidget {
 class _FlowCard extends StatelessWidget {
   const _FlowCard({
     required this.iconBg,
-    required this.icon,
-    required this.iconColor,
+    required this.emoji,
     required this.title,
     required this.subtitle,
     this.trailing,
     this.subtitleColor,
+    this.cardTint,
   });
 
   final Color iconBg;
-  final IconData icon;
-  final Color iconColor;
+  final String emoji;
   final String title;
   final String subtitle;
   final Widget? trailing;
   final Color? subtitleColor;
+  final Color? cardTint;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.symmetric(vertical: 20),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.85),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
+        color: (cardTint ?? AppColors.white).withValues(alpha: 0.45),
+        border: Border.all(color: AppColors.white.withValues(alpha: 0.65)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF6E87B4).withValues(alpha: 0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: AppColors.shadowBlue.withValues(alpha: 0.12),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 26, sigmaY: 26),
+          child: Container(
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: iconBg,
-              borderRadius: BorderRadius.circular(10),
+              color: AppColors.white.withValues(alpha: 0.45),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: AppColors.white.withValues(alpha: 0.65),
+              ),
             ),
-            child: Icon(icon, size: 18, color: iconColor),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: _textColor,
+                Container(
+                  width: 36,
+                  height: 36,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: iconBg,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.white.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  child: Text(emoji, style: const TextStyle(fontSize: 18)),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: subtitleColor ?? AppColors.grayText,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: subtitleColor ?? _grayText,
-                  ),
-                ),
+                if (trailing != null) trailing!,
               ],
             ),
           ),
-          ?trailing,
-        ],
+        ),
       ),
     );
   }
+}
+
+class _FlowArrow extends StatelessWidget {
+  const _FlowArrow({this.length = 40});
+
+  final double length;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(size: Size(16, length), painter: _ArrowPainter());
+  }
+}
+
+class _ArrowPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppColors.balanceCentsText
+      ..strokeWidth = 1.6
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    final cx = size.width / 2;
+
+    // вертикальна лінія
+    canvas.drawLine(Offset(cx, 0), Offset(cx, size.height), paint);
+
+    // наконечник — дві похилі рисочки
+    const head = 6.0;
+    canvas.drawLine(
+      Offset(cx - head, size.height - head),
+      Offset(cx, size.height),
+      paint,
+    );
+    canvas.drawLine(
+      Offset(cx + head, size.height - head),
+      Offset(cx, size.height),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

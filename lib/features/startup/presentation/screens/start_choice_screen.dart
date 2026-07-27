@@ -5,12 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/theme/app_colors.dart';
 import '../../../auth/application/providers/auth_providers.dart';
 import '../../../../shared/widgets/gradient_background.dart';
-
-const _textColor = Color(0xFF3B4358);
-const _grayText = Color(0xFF7A8296);
-const _accentBlue = Color(0xFF3D6FE5);
 
 class StartChoiceScreen extends ConsumerStatefulWidget {
   const StartChoiceScreen({super.key});
@@ -52,19 +49,19 @@ class _StartChoiceScreenState extends ConsumerState<StartChoiceScreen> {
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w700,
-                  color: _textColor,
+                  color: AppColors.textDark,
                 ),
               ),
               const SizedBox(height: 8),
               const Text(
                 'Pick one — you can change this later.',
-                style: TextStyle(fontSize: 14, color: _grayText),
+                style: TextStyle(fontSize: 14, color: AppColors.grayText),
               ),
               const SizedBox(height: 30),
               _StartOption(
-                iconBg: const Color(0xFFD6E6FF),
+                iconBg: AppColors.accentBlueBg,
                 icon: Icons.account_balance_outlined,
-                iconColor: const Color(0xFF3D6FE5),
+                iconColor: AppColors.accentBlue,
                 title: 'Connect Monobank',
                 subtitle: 'Import payments automatically — 2 minutes.',
                 badge: 'popular',
@@ -72,18 +69,18 @@ class _StartChoiceScreenState extends ConsumerState<StartChoiceScreen> {
               ),
               const SizedBox(height: 14),
               _StartOption(
-                iconBg: const Color(0xFFFFE7CE),
+                iconBg: AppColors.iconBgOrange,
                 icon: Icons.edit_outlined,
-                iconColor: const Color(0xFFC17A2E),
+                iconColor: AppColors.iconFgOrange,
                 title: 'Add manually',
                 subtitle: 'Create an account and track operations yourself.',
                 onTap: () => _selectAndContinue(context, 'Add manually'),
               ),
               const SizedBox(height: 14),
               _StartOption(
-                iconBg: const Color(0xFFFFE0D6),
+                iconBg: AppColors.iconBgOrangeAlt,
                 icon: Icons.visibility_off_outlined,
-                iconColor: const Color(0xFFC1602E),
+                iconColor: AppColors.iconFgOrangeAlt,
                 title: 'Try the demo',
                 subtitle: 'Look around with sample data first.',
                 onTap: () => context.goNamed(AppRoute.home.name),
@@ -122,7 +119,7 @@ class _StartOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white.withValues(alpha: 0.7),
+      color: AppColors.white.withValues(alpha: 0.7),
       borderRadius: BorderRadius.circular(22),
       child: InkWell(
         borderRadius: BorderRadius.circular(24),
@@ -131,7 +128,7 @@ class _StartOption extends StatelessWidget {
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.9)),
+            border: Border.all(color: AppColors.white.withValues(alpha: 0.9)),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -158,7 +155,7 @@ class _StartOption extends StatelessWidget {
                             style: const TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 15,
-                              color: _textColor,
+                              color: AppColors.textDark,
                             ),
                           ),
                         ),
@@ -168,7 +165,7 @@ class _StartOption extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
-                              color: _accentBlue,
+                              color: AppColors.accentBlue,
                             ),
                           ),
                       ],
@@ -178,7 +175,7 @@ class _StartOption extends StatelessWidget {
                       subtitle,
                       style: const TextStyle(
                         fontSize: 12.5,
-                        color: _grayText,
+                        color: AppColors.grayText,
                         height: 1.3,
                       ),
                     ),
@@ -214,13 +211,13 @@ class ReadyScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.w700,
-                    color: _textColor,
+                    color: AppColors.textDark,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   option,
-                  style: const TextStyle(fontSize: 14, color: _grayText),
+                  style: const TextStyle(fontSize: 14, color: AppColors.grayText),
                   textAlign: TextAlign.center,
                 ),
               ],

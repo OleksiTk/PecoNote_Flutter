@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-const _textColor = Color(0xFF3B4358);
+import '../../app/theme/app_colors.dart';
 
 /// Текстове поле у стилі PecoNote: велика сіра мітка-капс над напівпрозорим
 /// заокругленим полем уводу.
@@ -42,7 +42,7 @@ class _AppTextFieldState extends State<AppTextField> {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF6E87B4).withValues(alpha: 0.10),
+            color: AppColors.shadowBlue.withValues(alpha: 0.10),
             blurRadius: 18,
             offset: const Offset(0, 6),
           ),
@@ -55,9 +55,9 @@ class _AppTextFieldState extends State<AppTextField> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.72), // було 0.45
+              color: AppColors.white.withValues(alpha: 0.72), // було 0.45
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.9),
+                color: AppColors.white.withValues(alpha: 0.9),
               ), // було 0.70
               borderRadius: BorderRadius.circular(18),
             ),
@@ -72,7 +72,7 @@ class _AppTextFieldState extends State<AppTextField> {
                         style: const TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF98A0B5),
+                          color: AppColors.labelGray,
                           letterSpacing: 0.6,
                         ),
                       ),
@@ -85,14 +85,14 @@ class _AppTextFieldState extends State<AppTextField> {
                         textInputAction: widget.textInputAction,
                         style: const TextStyle(
                           fontSize: 14,
-                          color: _textColor,
+                          color: AppColors.textDark,
                           fontWeight: FontWeight.w500,
                         ),
                         decoration: InputDecoration(
                           isDense: true,
                           border: InputBorder.none,
                           hintText: widget.hintText,
-                          hintStyle: TextStyle(color: _textColor),
+                          hintStyle: TextStyle(color: AppColors.textDark),
                         ),
                       ),
                       if (widget.errorText != null) ...[
@@ -100,7 +100,7 @@ class _AppTextFieldState extends State<AppTextField> {
                         Text(
                           widget.errorText!,
                           style: const TextStyle(
-                            color: Color(0xFFB3261E),
+                            color: AppColors.error,
                             fontSize: 12,
                           ),
                         ),
@@ -116,7 +116,7 @@ class _AppTextFieldState extends State<AppTextField> {
                           ? Icons.visibility_outlined
                           : Icons.visibility_off_outlined,
                       size: 20,
-                      color: const Color(0xFF98A0B5),
+                      color: AppColors.labelGray,
                     ),
                   ),
               ],

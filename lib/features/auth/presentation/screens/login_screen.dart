@@ -6,15 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/theme/app_colors.dart';
 import '../../../../core/errors/app_failure.dart';
 import '../../../../shared/widgets/app_buttons.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../../../shared/widgets/gradient_background.dart';
 import '../../application/providers/auth_providers.dart';
-
-const _textColor = Color(0xFF3B4358);
-const _grayText = Color(0xFF7A8296);
-const _accentBlue = Color(0xFF5B7FB9);
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -84,7 +81,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w900,
-                  color: _textColor,
+                  color: AppColors.textDark,
                 ),
               ),
               const SizedBox(height: 8),
@@ -92,7 +89,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 'Sign in to your PecoNote account.',
                 style: TextStyle(
                   fontSize: 14,
-                  color: _grayText,
+                  color: AppColors.grayText,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -125,7 +122,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: _accentBlue,
+                        color: AppColors.accentBlueMuted,
                       ),
                     ),
                   ),
@@ -135,7 +132,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Text(
                   _error!,
                   style: const TextStyle(
-                    color: Color(0xFFB3261E),
+                    color: AppColors.error,
                     fontSize: 13,
                   ),
                 ),
@@ -144,8 +141,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               PillButton(
                 label: _loading ? 'Signing in…' : 'Sign in',
                 onPressed: _loading ? null : () => unawaited(_signIn()),
-                backgroundColor: _accentBlue,
-                foregroundColor: Colors.white,
+                backgroundColor: AppColors.accentBlueMuted,
+                foregroundColor: AppColors.white,
               ),
               const SizedBox(height: 16),
 
@@ -154,14 +151,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Text.rich(
                   TextSpan(
                     text: 'New here?',
-                    style: const TextStyle(color: Colors.grey, fontSize: 14),
+                    style: const TextStyle(color: AppColors.grayText, fontSize: 14),
                     children: [
                       const WidgetSpan(child: SizedBox(width: 5)),
 
                       TextSpan(
                         text: 'Create account',
                         style: const TextStyle(
-                          color: _accentBlue,
+                          color: AppColors.accentBlueMuted,
                           fontWeight: FontWeight.bold,
                         ),
                         recognizer: TapGestureRecognizer()

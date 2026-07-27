@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-const _textColor = Color(0xFF3B4358);
+import '../../app/theme/app_colors.dart';
 
 /// Скляна квадратна картка з символом-логотипом "₴".
 class AppLogoMark extends StatelessWidget {
@@ -15,12 +15,12 @@ class AppLogoMark extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.40),
+        color: AppColors.white.withValues(alpha: 0.40),
         borderRadius: BorderRadius.circular(size * 0.3),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.9)),
+        border: Border.all(color: AppColors.white.withValues(alpha: 0.9)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF788FBE).withValues(alpha: 0.12),
+            color: AppColors.iconShadow.withValues(alpha: 0.12),
             blurRadius: 36,
             offset: const Offset(0, 14),
           ),
@@ -32,7 +32,7 @@ class AppLogoMark extends StatelessWidget {
           style: TextStyle(
             fontSize: fontSize,
             fontWeight: FontWeight.w300,
-            color: _textColor,
+            color: AppColors.textDark,
           ),
         ),
       ),
@@ -52,17 +52,17 @@ class AppWordmark extends StatelessWidget {
       text: TextSpan(
         style: TextStyle(
           fontSize: fontSize,
-          color: _textColor,
+          color: AppColors.textDark,
           letterSpacing: -0.3,
         ),
         children: [
           const TextSpan(
             text: 'peco',
-            style: TextStyle(fontWeight: FontWeight.w300),
+            style: TextStyle(fontWeight: FontWeight.w500),
           ),
           TextSpan(
             text: 'Note',
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: fontSize),
+            style: TextStyle(fontWeight: FontWeight.w800, fontSize: fontSize),
           ),
         ],
       ),

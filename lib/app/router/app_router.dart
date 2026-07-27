@@ -8,6 +8,7 @@ import '../../features/auth/presentation/screens/password_reset_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
+import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/startup/presentation/screens/start_choice_screen.dart';
 import '../../features/startup/presentation/screens/splash_screen.dart';
 import 'app_routes.dart';
@@ -103,6 +104,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoute.home.path,
         name: AppRoute.home.name,
         builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: AppRoute.settings.path,
+        name: AppRoute.settings.name,
+        builder: (context, state) => const SettingsScreen(),
       ),
     ],
   );

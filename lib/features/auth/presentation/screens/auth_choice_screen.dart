@@ -3,13 +3,10 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter/gestures.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/theme/app_colors.dart';
 import '../../../../shared/widgets/app_buttons.dart';
 import '../../../../shared/widgets/app_logo.dart';
 import '../../../../shared/widgets/gradient_background.dart';
-
-const _textColor = Color(0xFFFFFFFF);
-const _grayText = Color(0xFF7A8296);
-const _accentBlue = Color(0xFF5B7FB9);
 
 class AuthChoiceScreen extends StatelessWidget {
   const AuthChoiceScreen({super.key});
@@ -38,35 +35,42 @@ class AuthChoiceScreen extends StatelessWidget {
               const SizedBox(height: 8),
               const Text(
                 'Calm control over your money.',
-                style: TextStyle(fontSize: 14, color: _grayText),
+                style: TextStyle(fontSize: 14, color: AppColors.grayText),
               ),
               const Spacer(flex: 5),
               PillButton(
                 label: 'Continue with Google',
-                backgroundColor: Colors.white,
+                backgroundColor: AppColors.white.withValues(alpha: 0.75),
                 leading: const Icon(
                   Icons.g_mobiledata,
                   size: 26,
-                  color: _grayText,
+                  color: AppColors.grayText,
                 ),
+                borderColor: AppColors.balanceGradientEnd,
                 onPressed: () => _goToLogin(context),
               ),
               const SizedBox(height: 12),
               PillButton(
                 label: 'Continue with Apple',
-                backgroundColor: Colors.white,
-                leading: const Icon(Icons.apple, size: 20, color: _grayText),
+                backgroundColor: AppColors.white.withValues(alpha: 0.75),
+                borderColor: AppColors.balanceGradientEnd,
+                leading: const Icon(
+                  Icons.apple,
+                  size: 20,
+                  color: AppColors.grayText,
+                ),
 
                 onPressed: () => _goToLogin(context),
               ),
               const SizedBox(height: 12),
               PillButton(
                 label: 'Continue with Email',
-                backgroundColor: Colors.white,
+                backgroundColor: AppColors.white.withValues(alpha: 0.75),
+                borderColor: AppColors.balanceGradientEnd,
                 leading: const Icon(
                   Icons.email_outlined,
                   size: 20,
-                  color: _grayText,
+                  color: AppColors.grayText,
                 ),
                 onPressed: () => _goToLogin(context),
               ),
@@ -74,12 +78,15 @@ class AuthChoiceScreen extends StatelessWidget {
               Text.rich(
                 TextSpan(
                   text: 'No account? ',
-                  style: const TextStyle(color: Colors.grey, fontSize: 14),
+                  style: const TextStyle(
+                    color: AppColors.grayText,
+                    fontSize: 14,
+                  ),
                   children: [
                     TextSpan(
                       text: 'Sign up',
                       style: const TextStyle(
-                        color: _accentBlue,
+                        color: AppColors.accentBlueMuted,
                         fontWeight: FontWeight.bold,
                       ),
                       recognizer: TapGestureRecognizer()
@@ -96,7 +103,7 @@ class AuthChoiceScreen extends StatelessWidget {
                   text: const TextSpan(
                     style: TextStyle(
                       fontSize: 12,
-                      color: _grayText,
+                      color: AppColors.grayText,
                       height: 1.4,
                     ),
                     children: [
@@ -104,7 +111,7 @@ class AuthChoiceScreen extends StatelessWidget {
                       TextSpan(
                         text: 'Terms of Service',
                         style: TextStyle(
-                          color: _grayText,
+                          color: AppColors.grayText,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -112,7 +119,7 @@ class AuthChoiceScreen extends StatelessWidget {
                       TextSpan(
                         text: 'Privacy Policy',
                         style: TextStyle(
-                          color: _grayText,
+                          color: AppColors.grayText,
                           fontWeight: FontWeight.w600,
                         ),
                       ),

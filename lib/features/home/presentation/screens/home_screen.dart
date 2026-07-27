@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/app_colors.dart';
+import '../../../../shared/widgets/app_bottom_nav_bar.dart';
 import '../../../../shared/widgets/gradient_background.dart';
-
-const _textColor = Color(0xFF3B4358);
-const _grayText = Color(0xFF7A8296);
-const _accentBlue = Color(0xFF3D6FE5);
 
 /// Домашній екран PecoNote: баланс по всіх рахунках і останні транзакції.
 /// Лише статичний макет (mock-дані) — без реальних провайдерів чи навігації.
@@ -29,7 +27,7 @@ class HomeScreen extends StatelessWidget {
             const _CarouselDots(activeIndex: 0, count: 4),
             const SizedBox(height: 16),
             Expanded(child: _TransactionsSheet()),
-            const _BottomNavBar(activeIndex: 0),
+            const AppBottomNavBar(activeTab: AppNavTab.home),
           ],
         ),
       ),
@@ -49,16 +47,16 @@ class _HomeHeader extends StatelessWidget {
           height: 44,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: const Color(0xFFD6E6FF),
+            color: AppColors.accentBlueBg,
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white.withValues(alpha: 0.8)),
+            border: Border.all(color: AppColors.white.withValues(alpha: 0.8)),
           ),
           child: const Text(
             'D',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: _accentBlue,
+              color: AppColors.accentBlue,
             ),
           ),
         ),
@@ -68,14 +66,14 @@ class _HomeHeader extends StatelessWidget {
           height: 44,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.75),
+            color: AppColors.white.withValues(alpha: 0.75),
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white.withValues(alpha: 0.9)),
+            border: Border.all(color: AppColors.white.withValues(alpha: 0.9)),
           ),
           child: const Icon(
             Icons.bar_chart_rounded,
             size: 20,
-            color: _textColor,
+            color: AppColors.textDark,
           ),
         ),
       ],
@@ -93,15 +91,19 @@ class _BalanceCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(22, 20, 22, 24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.85)),
+        border: Border.all(color: AppColors.white.withValues(alpha: 0.85)),
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFEAF2FF), Color(0xFFFCEFE6), Color(0xFFF6F8FC)],
+          colors: [
+            AppColors.balanceGradientStart,
+            AppColors.balanceGradientMid,
+            AppColors.balanceGradientEnd,
+          ],
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF6E87B4).withValues(alpha: 0.14),
+            color: AppColors.shadowBlue.withValues(alpha: 0.14),
             blurRadius: 24,
             offset: const Offset(0, 10),
           ),
@@ -117,7 +119,7 @@ class _BalanceCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
-                  color: _textColor,
+                  color: AppColors.textDark,
                 ),
               ),
               const Spacer(),
@@ -127,10 +129,10 @@ class _BalanceCard extends StatelessWidget {
                   vertical: 5,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.75),
+                  color: AppColors.white.withValues(alpha: 0.75),
                   borderRadius: BorderRadius.circular(99),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: AppColors.white.withValues(alpha: 0.9),
                   ),
                 ),
                 child: const Text(
@@ -138,7 +140,7 @@ class _BalanceCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
-                    color: _textColor,
+                    color: AppColors.textDark,
                   ),
                 ),
               ),
@@ -153,7 +155,7 @@ class _BalanceCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 34,
                     fontWeight: FontWeight.w800,
-                    color: _textColor,
+                    color: AppColors.textDark,
                     height: 1,
                   ),
                 ),
@@ -162,7 +164,7 @@ class _BalanceCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF6B7690),
+                    color: AppColors.balanceCentsText,
                     height: 1,
                   ),
                 ),
@@ -172,7 +174,7 @@ class _BalanceCard extends StatelessWidget {
           const SizedBox(height: 6),
           const Text(
             'Total balance',
-            style: TextStyle(fontSize: 13, color: _grayText),
+            style: TextStyle(fontSize: 13, color: AppColors.grayText),
           ),
         ],
       ),
@@ -198,8 +200,8 @@ class _CarouselDots extends StatelessWidget {
           height: 6,
           decoration: BoxDecoration(
             color: active
-                ? _accentBlue
-                : _accentBlue.withValues(alpha: 0.25),
+                ? AppColors.accentBlue
+                : AppColors.accentBlue.withValues(alpha: 0.25),
             borderRadius: BorderRadius.circular(99),
           ),
         );
@@ -214,8 +216,8 @@ class _TransactionsSheet extends StatelessWidget {
   final List<_TransactionData> _transactions = [
     _TransactionData(
       icon: Icons.shopping_cart_outlined,
-      iconBg: const Color(0xFFE0F3E6),
-      iconColor: const Color(0xFF3F9463),
+      iconBg: AppColors.iconBgGreen,
+      iconColor: AppColors.iconFgGreen,
       title: 'Silpo',
       subtitle: 'Groceries · 18:24',
       amount: '−₴ 642.18',
@@ -223,8 +225,8 @@ class _TransactionsSheet extends StatelessWidget {
     ),
     _TransactionData(
       icon: Icons.work_outline,
-      iconBg: const Color(0xFFF7E1E4),
-      iconColor: const Color(0xFF9C3B49),
+      iconBg: AppColors.iconBgRed,
+      iconColor: AppColors.iconFgRed,
       title: 'Salary',
       subtitle: 'Income · 09:00',
       amount: '+₴ 46 000',
@@ -232,8 +234,8 @@ class _TransactionsSheet extends StatelessWidget {
     ),
     _TransactionData(
       icon: Icons.directions_car_outlined,
-      iconBg: const Color(0xFFFBEFD9),
-      iconColor: const Color(0xFFB9862E),
+      iconBg: AppColors.iconBgYellow,
+      iconColor: AppColors.iconFgYellow,
       title: 'Uklon',
       subtitle: 'Transport · Yesterday',
       amount: '−₴ 185.00',
@@ -241,8 +243,8 @@ class _TransactionsSheet extends StatelessWidget {
     ),
     _TransactionData(
       icon: Icons.local_cafe_outlined,
-      iconBg: const Color(0xFFEFE2D8),
-      iconColor: const Color(0xFF8C6A4E),
+      iconBg: AppColors.iconBgBrown,
+      iconColor: AppColors.iconFgBrown,
       title: 'Blur Coffee',
       subtitle: 'Cafés · Yesterday',
       amount: '−₴ 238.50',
@@ -257,7 +259,7 @@ class _TransactionsSheet extends StatelessWidget {
         Container(
           width: double.infinity,
           decoration: const BoxDecoration(
-            color: Colors.white,
+            color: AppColors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: Column(
@@ -272,7 +274,7 @@ class _TransactionsSheet extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: _textColor,
+                        color: AppColors.textDark,
                       ),
                     ),
                     const Spacer(),
@@ -281,7 +283,7 @@ class _TransactionsSheet extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: _accentBlue,
+                        color: AppColors.accentBlue,
                       ),
                     ),
                   ],
@@ -310,17 +312,17 @@ class _TransactionsSheet extends StatelessWidget {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.white,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF6E87B4).withValues(alpha: 0.22),
+                  color: AppColors.shadowBlue.withValues(alpha: 0.22),
                   blurRadius: 18,
                   offset: const Offset(0, 8),
                 ),
               ],
             ),
-            child: const Icon(Icons.add, color: _accentBlue, size: 26),
+            child: const Icon(Icons.add, color: AppColors.accentBlue, size: 26),
           ),
         ),
       ],
@@ -337,12 +339,12 @@ class _SearchField extends StatelessWidget {
       height: 46,
       padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F8),
+        color: AppColors.searchFieldBg,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
-          const Icon(Icons.search, size: 20, color: Color(0xFF9AA2B5)),
+          const Icon(Icons.search, size: 20, color: AppColors.placeholderGray),
           const SizedBox(width: 8),
           Expanded(
             child: TextField(
@@ -350,9 +352,9 @@ class _SearchField extends StatelessWidget {
                 isDense: true,
                 border: InputBorder.none,
                 hintText: 'Search transactions…',
-                hintStyle: TextStyle(color: Color(0xFF9AA2B5), fontSize: 14),
+                hintStyle: TextStyle(color: AppColors.placeholderGray, fontSize: 14),
               ),
-              style: const TextStyle(color: _textColor, fontSize: 14),
+              style: const TextStyle(color: AppColors.textDark, fontSize: 14),
             ),
           ),
         ],
@@ -412,13 +414,13 @@ class _TransactionTile extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w700,
-                    color: _textColor,
+                    color: AppColors.textDark,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   data.subtitle,
-                  style: const TextStyle(fontSize: 12, color: _grayText),
+                  style: const TextStyle(fontSize: 12, color: AppColors.grayText),
                 ),
               ],
             ),
@@ -428,75 +430,10 @@ class _TransactionTile extends StatelessWidget {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: data.isIncome
-                  ? const Color(0xFF2FA36B)
-                  : const Color(0xFFD1445B),
+              color: data.isIncome ? AppColors.income : AppColors.expense,
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _BottomNavBar extends StatelessWidget {
-  const _BottomNavBar({required this.activeIndex});
-
-  final int activeIndex;
-
-  static const _items = [
-    (icon: Icons.home_rounded, label: 'Home'),
-    (icon: Icons.list_alt_outlined, label: 'Ops'),
-    (icon: Icons.inbox_outlined, label: 'Inbox'),
-    (icon: Icons.bar_chart_rounded, label: 'Stats'),
-    (icon: Icons.tune_outlined, label: 'Settings'),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: List.generate(_items.length, (i) {
-          final item = _items[i];
-          final active = i == activeIndex;
-          final color = active ? _accentBlue : const Color(0xFF9AA2B5);
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Icon(item.icon, size: 22, color: color),
-                  if (item.label == 'Inbox')
-                    Positioned(
-                      right: -2,
-                      top: -2,
-                      child: Container(
-                        width: 7,
-                        height: 7,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFE0525F),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                item.label,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                  color: color,
-                ),
-              ),
-            ],
-          );
-        }),
       ),
     );
   }

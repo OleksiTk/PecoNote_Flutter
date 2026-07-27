@@ -5,14 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../app/theme/app_colors.dart';
 import '../../../../core/errors/app_failure.dart';
 import '../../../../shared/widgets/app_buttons.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../../../../shared/widgets/gradient_background.dart';
 import '../../application/providers/auth_providers.dart';
-
-const _textColor = Color(0xFF3B4358);
-const _grayText = Color(0xFF7C86A0);
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -85,13 +83,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             style: TextStyle(
               fontSize: 26,
               fontWeight: FontWeight.w700,
-              color: _textColor,
+              color: AppColors.textDark,
             ),
           ),
           const SizedBox(height: 8),
           const Text(
             "Enter your email and we'll send you a reset link.",
-            style: TextStyle(fontSize: 13, height: 1.6, color: _grayText),
+            style: TextStyle(fontSize: 13, height: 1.6, color: AppColors.grayText),
           ),
           const SizedBox(height: 28),
           AppTextField(
@@ -106,7 +104,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             const SizedBox(height: 12),
             Text(
               _error!,
-              style: const TextStyle(color: Color(0xFFB3261E), fontSize: 13),
+              style: const TextStyle(color: AppColors.error, fontSize: 13),
             ),
           ],
           const SizedBox(height: 26),
@@ -141,9 +139,9 @@ class _SentContent extends StatelessWidget {
               height: 80,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.42),
+                color: AppColors.white.withValues(alpha: 0.42),
                 borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.75)),
+                border: Border.all(color: AppColors.white.withValues(alpha: 0.75)),
               ),
               child: const Text('✉️', style: TextStyle(fontSize: 34)),
             ),
@@ -153,14 +151,14 @@ class _SentContent extends StatelessWidget {
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w700,
-                color: _textColor,
+                color: AppColors.textDark,
               ),
             ),
             const SizedBox(height: 10),
             Text(
               'We sent a reset link to $email. If it is not there, check Spam.',
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 13, height: 1.6, color: _grayText),
+              style: const TextStyle(fontSize: 13, height: 1.6, color: AppColors.grayText),
             ),
             const SizedBox(height: 30),
             PillButton(label: 'Back to sign in', onPressed: onBack),
@@ -251,7 +249,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 style: const TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w700,
-                  color: _textColor,
+                  color: AppColors.textDark,
                 ),
               ),
               const SizedBox(height: 8),
@@ -259,7 +257,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 _changed
                     ? 'You can now sign in with your new password.'
                     : 'Use at least 8 characters for your new password.',
-                style: const TextStyle(fontSize: 13, height: 1.6, color: _grayText),
+                style: const TextStyle(fontSize: 13, height: 1.6, color: AppColors.grayText),
               ),
               const SizedBox(height: 28),
               if (!_changed) ...[
@@ -283,7 +281,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                   Text(
                     _error!,
                     style: const TextStyle(
-                      color: Color(0xFFB3261E),
+                      color: AppColors.error,
                       fontSize: 13,
                     ),
                   ),
