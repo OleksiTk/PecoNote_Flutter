@@ -9,6 +9,14 @@ import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
+import '../../features/startup/presentation/screens/connect_monobank_screen.dart';
+import '../../features/startup/presentation/screens/monobank_cards_screen.dart';
+import '../../features/startup/presentation/screens/monobank_done_screen.dart';
+import '../../features/startup/presentation/screens/monobank_period_screen.dart';
+import '../../features/startup/presentation/screens/monobank_qr_scan_screen.dart';
+import '../../features/startup/presentation/screens/monobank_rules_created_screen.dart';
+import '../../features/startup/presentation/screens/monobank_sort_screen.dart';
+import '../../features/startup/presentation/screens/monobank_syncing_screen.dart';
 import '../../features/startup/presentation/screens/start_choice_screen.dart';
 import '../../features/startup/presentation/screens/splash_screen.dart';
 import 'app_routes.dart';
@@ -91,6 +99,46 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoute.startChoice.path,
         name: AppRoute.startChoice.name,
         builder: (context, state) => const StartChoiceScreen(),
+      ),
+      GoRoute(
+        path: AppRoute.connectMonobank.path,
+        name: AppRoute.connectMonobank.name,
+        builder: (context, state) => const ConnectMonobankScreen(),
+      ),
+      GoRoute(
+        path: AppRoute.monobankQrScan.path,
+        name: AppRoute.monobankQrScan.name,
+        builder: (context, state) => const MonobankQrScanScreen(),
+      ),
+      GoRoute(
+        path: AppRoute.monobankCards.path,
+        name: AppRoute.monobankCards.name,
+        builder: (context, state) => const MonobankCardsScreen(),
+      ),
+      GoRoute(
+        path: AppRoute.monobankPeriod.path,
+        name: AppRoute.monobankPeriod.name,
+        builder: (context, state) => const MonobankPeriodScreen(),
+      ),
+      GoRoute(
+        path: AppRoute.monobankSyncing.path,
+        name: AppRoute.monobankSyncing.name,
+        builder: (context, state) => const MonobankSyncingScreen(),
+      ),
+      GoRoute(
+        path: AppRoute.monobankDone.path,
+        name: AppRoute.monobankDone.name,
+        builder: (context, state) => const MonobankDoneScreen(),
+      ),
+      GoRoute(
+        path: AppRoute.monobankSort.path,
+        name: AppRoute.monobankSort.name,
+        builder: (context, state) => const MonobankSortScreen(),
+      ),
+      GoRoute(
+        path: AppRoute.monobankRulesCreated.path,
+        name: AppRoute.monobankRulesCreated.name,
+        builder: (context, state) => const MonobankRulesCreatedScreen(),
       ),
       GoRoute(
         path: AppRoute.ready.path,

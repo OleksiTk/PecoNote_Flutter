@@ -40,7 +40,7 @@ class AuthChoiceScreen extends StatelessWidget {
               const Spacer(flex: 5),
               PillButton(
                 label: 'Continue with Google',
-                backgroundColor: AppColors.white.withValues(alpha: 0.75),
+                backgroundColor: AppColors.white.withValues(alpha: 0.55),
                 leading: const Icon(
                   Icons.g_mobiledata,
                   size: 26,
@@ -52,7 +52,7 @@ class AuthChoiceScreen extends StatelessWidget {
               const SizedBox(height: 12),
               PillButton(
                 label: 'Continue with Apple',
-                backgroundColor: AppColors.white.withValues(alpha: 0.75),
+                backgroundColor: AppColors.white.withValues(alpha: 0.55),
                 borderColor: AppColors.balanceGradientEnd,
                 leading: const Icon(
                   Icons.apple,
@@ -65,7 +65,7 @@ class AuthChoiceScreen extends StatelessWidget {
               const SizedBox(height: 12),
               PillButton(
                 label: 'Continue with Email',
-                backgroundColor: AppColors.white.withValues(alpha: 0.75),
+                backgroundColor: AppColors.white.withValues(alpha: 0.55),
                 borderColor: AppColors.balanceGradientEnd,
                 leading: const Icon(
                   Icons.email_outlined,

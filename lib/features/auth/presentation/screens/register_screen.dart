@@ -165,10 +165,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 12),
                 Text(
                   _error!,
-                  style: const TextStyle(
-                    color: AppColors.error,
-                    fontSize: 13,
-                  ),
+                  style: const TextStyle(color: AppColors.error, fontSize: 13),
                 ),
               ],
               const SizedBox(height: 26),
@@ -177,6 +174,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 onPressed: _loading ? null : () => unawaited(_register()),
                 backgroundColor: AppColors.accentBlueMuted,
                 foregroundColor: AppColors.white,
+                borderColor: AppColors.accentBlueMuted,
               ),
               const SizedBox(height: 16),
               TextLinkRow(

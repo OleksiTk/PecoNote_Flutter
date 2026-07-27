@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -131,10 +131,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               if (_error != null) ...[
                 Text(
                   _error!,
-                  style: const TextStyle(
-                    color: AppColors.error,
-                    fontSize: 13,
-                  ),
+                  style: const TextStyle(color: AppColors.error, fontSize: 13),
                 ),
                 const SizedBox(height: 12),
               ],
@@ -143,6 +140,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 onPressed: _loading ? null : () => unawaited(_signIn()),
                 backgroundColor: AppColors.accentBlueMuted,
                 foregroundColor: AppColors.white,
+                borderColor: AppColors.accentBlueMuted,
               ),
               const SizedBox(height: 16),
 
@@ -151,7 +149,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Text.rich(
                   TextSpan(
                     text: 'New here?',
-                    style: const TextStyle(color: AppColors.grayText, fontSize: 14),
+                    style: const TextStyle(
+                      color: AppColors.grayText,
+                      fontSize: 14,
+                    ),
                     children: [
                       const WidgetSpan(child: SizedBox(width: 5)),
 

@@ -64,7 +64,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return GradientBackground(
       child: SafeArea(
-        child: _sent ? _SentContent(email: _email.text, onBack: _back) : _form(),
+        child: _sent
+            ? _SentContent(email: _email.text, onBack: _back)
+            : _form(),
       ),
     );
   }
@@ -89,7 +91,11 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           const SizedBox(height: 8),
           const Text(
             "Enter your email and we'll send you a reset link.",
-            style: TextStyle(fontSize: 13, height: 1.6, color: AppColors.grayText),
+            style: TextStyle(
+              fontSize: 13,
+              height: 1.6,
+              color: AppColors.grayText,
+            ),
           ),
           const SizedBox(height: 28),
           AppTextField(
@@ -110,6 +116,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           const SizedBox(height: 26),
           PillButton(
             label: _loading ? 'Sending…' : 'Send link',
+            backgroundColor: AppColors.accentBlueMuted,
+            foregroundColor: AppColors.white,
+            borderColor: AppColors.accentBlueMuted,
             onPressed: _loading ? null : () => unawaited(_send()),
           ),
           const SizedBox(height: 16),
@@ -141,7 +150,9 @@ class _SentContent extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.white.withValues(alpha: 0.42),
                 borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: AppColors.white.withValues(alpha: 0.75)),
+                border: Border.all(
+                  color: AppColors.white.withValues(alpha: 0.75),
+                ),
               ),
               child: const Text('✉️', style: TextStyle(fontSize: 34)),
             ),
@@ -158,10 +169,20 @@ class _SentContent extends StatelessWidget {
             Text(
               'We sent a reset link to $email. If it is not there, check Spam.',
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 13, height: 1.6, color: AppColors.grayText),
+              style: const TextStyle(
+                fontSize: 13,
+                height: 1.6,
+                color: AppColors.grayText,
+              ),
             ),
             const SizedBox(height: 30),
-            PillButton(label: 'Back to sign in', onPressed: onBack),
+            PillButton(
+              label: 'Back to sign in',
+              onPressed: onBack,
+              backgroundColor: AppColors.accentBlueMuted,
+              foregroundColor: AppColors.white,
+              borderColor: AppColors.accentBlueMuted,
+            ),
           ],
         ),
       ),
@@ -216,12 +237,14 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       _error = null;
     });
     try {
-      await ref.read(authRepositoryProvider).resetPassword(
-        uid: widget.uid,
-        token: widget.token,
-        password: _password.text,
-        confirmPassword: _confirmPassword.text,
-      );
+      await ref
+          .read(authRepositoryProvider)
+          .resetPassword(
+            uid: widget.uid,
+            token: widget.token,
+            password: _password.text,
+            confirmPassword: _confirmPassword.text,
+          );
       if (mounted) setState(() => _changed = true);
     } on AppFailure catch (failure) {
       if (mounted) setState(() => _error = failure.message);
@@ -257,7 +280,11 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 _changed
                     ? 'You can now sign in with your new password.'
                     : 'Use at least 8 characters for your new password.',
-                style: const TextStyle(fontSize: 13, height: 1.6, color: AppColors.grayText),
+                style: const TextStyle(
+                  fontSize: 13,
+                  height: 1.6,
+                  color: AppColors.grayText,
+                ),
               ),
               const SizedBox(height: 28),
               if (!_changed) ...[
@@ -288,6 +315,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 ],
                 const SizedBox(height: 26),
                 PillButton(
+                  backgroundColor: AppColors.accentBlueMuted,
+                  foregroundColor: AppColors.white,
+                  borderColor: AppColors.accentBlueMuted,
                   label: _loading ? 'Saving…' : 'Set new password',
                   onPressed: _loading ? null : () => unawaited(_reset()),
                 ),

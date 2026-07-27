@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,20 +36,12 @@ class _StartChoiceScreenState extends ConsumerState<StartChoiceScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  const Spacer(),
-                  TextButton(
-                    onPressed: _signingOut ? null : () => unawaited(_signOut()),
-                    child: Text(_signingOut ? 'Signing out…' : 'Sign out'),
-                  ),
-                ],
-              ),
+              const SizedBox(height: 24),
               const Text(
                 'How do you want to start?',
                 style: TextStyle(
                   fontSize: 26,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w900,
                   color: AppColors.textDark,
                 ),
               ),
@@ -60,31 +53,21 @@ class _StartChoiceScreenState extends ConsumerState<StartChoiceScreen> {
               const SizedBox(height: 30),
               _StartOption(
                 iconBg: AppColors.accentBlueBg,
-                icon: Icons.account_balance_outlined,
-                iconColor: AppColors.accentBlue,
+                emoji: '🏦',
                 title: 'Connect Monobank',
                 subtitle: 'Import payments automatically — 2 minutes.',
                 badge: 'popular',
-                onTap: () => _selectAndContinue(context, 'Connect Monobank'),
+                onTap: () => context.pushNamed(AppRoute.connectMonobank.name),
               ),
               const SizedBox(height: 14),
               _StartOption(
                 iconBg: AppColors.iconBgOrange,
-                icon: Icons.edit_outlined,
-                iconColor: AppColors.iconFgOrange,
+                emoji: '✍️',
                 title: 'Add manually',
                 subtitle: 'Create an account and track operations yourself.',
                 onTap: () => _selectAndContinue(context, 'Add manually'),
               ),
               const SizedBox(height: 14),
-              _StartOption(
-                iconBg: AppColors.iconBgOrangeAlt,
-                icon: Icons.visibility_off_outlined,
-                iconColor: AppColors.iconFgOrangeAlt,
-                title: 'Try the demo',
-                subtitle: 'Look around with sample data first.',
-                onTap: () => context.goNamed(AppRoute.home.name),
-              ),
             ],
           ),
         ),
@@ -100,8 +83,7 @@ class _StartChoiceScreenState extends ConsumerState<StartChoiceScreen> {
 class _StartOption extends StatelessWidget {
   const _StartOption({
     required this.iconBg,
-    required this.icon,
-    required this.iconColor,
+    required this.emoji,
     required this.title,
     required this.subtitle,
     required this.onTap,
@@ -109,8 +91,7 @@ class _StartOption extends StatelessWidget {
   });
 
   final Color iconBg;
-  final IconData icon;
-  final Color iconColor;
+  final String emoji;
   final String title;
   final String subtitle;
   final String? badge;
@@ -118,71 +99,104 @@ class _StartOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.white.withValues(alpha: 0.7),
-      borderRadius: BorderRadius.circular(22),
-      child: InkWell(
+    return Container(
+      decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: AppColors.white.withValues(alpha: 0.9)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadowBlue.withValues(alpha: 0.12),
+            blurRadius: 22,
+            offset: const Offset(0, 8),
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 46,
-                height: 46,
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
+          child: Material(
+            color: AppColors.white.withValues(alpha: 0.5),
+            child: InkWell(
+              onTap: onTap,
+              child: Container(
+                padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: iconBg,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: AppColors.white.withValues(alpha: 0.7),
+                  ),
                 ),
-                child: Icon(icon, size: 22, color: iconColor),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15,
-                              color: AppColors.textDark,
-                            ),
-                          ),
+                    Container(
+                      width: 46,
+                      height: 46,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: iconBg,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: AppColors.white.withValues(alpha: 0.6),
                         ),
-                        if (badge != null)
+                      ),
+                      child: Text(emoji, style: const TextStyle(fontSize: 22)),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  title,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 16,
+                                    color: AppColors.textDark,
+                                  ),
+                                ),
+                              ),
+                              if (badge != null)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.accentBlueBg,
+                                    borderRadius: BorderRadius.circular(99),
+                                  ),
+                                  child: Text(
+                                    badge!,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.accentBlue,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
                           Text(
-                            badge!,
+                            subtitle,
                             style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.accentBlue,
+                              fontSize: 13,
+                              color: AppColors.grayText,
+                              height: 1.4,
                             ),
                           ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: AppColors.grayText,
-                        height: 1.3,
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -217,7 +231,10 @@ class ReadyScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   option,
-                  style: const TextStyle(fontSize: 14, color: AppColors.grayText),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.grayText,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ],

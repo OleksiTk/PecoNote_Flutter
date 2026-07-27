@@ -93,6 +93,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               child: PillButton(
                 backgroundColor: AppColors.accentBlueMuted,
                 foregroundColor: AppColors.white,
+                borderColor: AppColors.accentBlueMuted,
                 label: _page == _pageCount - 1 ? 'Get started' : 'Next',
                 onPressed: () {
                   if (_page == _pageCount - 1) {
@@ -210,7 +211,7 @@ class _CategoriesIllustration extends StatelessWidget {
         const Positioned(
           left: 0,
           top: 60,
-          child: _Chip(emoji: '🏠', label: 'Transport'),
+          child: _Chip(emoji: '🚕', label: 'Transport'),
         ),
         Positioned(left: 0, right: 0, top: 130, child: _TransactionCard()),
         const Positioned(
@@ -315,7 +316,6 @@ class _TransactionCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    // Іконка мерчанта — щільніше скло, майже біла плитка.
                     Container(
                       width: 44,
                       height: 44,
@@ -581,10 +581,8 @@ class _ArrowPainter extends CustomPainter {
 
     final cx = size.width / 2;
 
-    // вертикальна лінія
     canvas.drawLine(Offset(cx, 0), Offset(cx, size.height), paint);
 
-    // наконечник — дві похилі рисочки
     const head = 6.0;
     canvas.drawLine(
       Offset(cx - head, size.height - head),
