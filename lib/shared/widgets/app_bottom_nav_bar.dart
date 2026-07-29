@@ -18,7 +18,6 @@ class AppBottomNavBar extends StatelessWidget {
     (tab: AppNavTab.home, icon: Icons.home_rounded, label: 'Home'),
     (tab: AppNavTab.ops, icon: Icons.list_alt_outlined, label: 'Ops'),
     (tab: AppNavTab.inbox, icon: Icons.inbox_outlined, label: 'Inbox'),
-    (tab: AppNavTab.stats, icon: Icons.bar_chart_rounded, label: 'Stats'),
     (tab: AppNavTab.settings, icon: Icons.tune_outlined, label: 'Settings'),
   ];
 
@@ -39,8 +38,19 @@ class AppBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.white,
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      margin: const EdgeInsets.fromLTRB(14, 0, 14, 24),
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadowBlue.withValues(alpha: 0.12),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: _items.map((item) {
