@@ -1,24 +1,23 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/router/app_routes.dart';
 import '../../app/theme/app_colors.dart';
 
-/// Tabs shown in [AppBottomNavBar]. Only [home] and [settings] are wired to
-/// real routes so far — the rest are placeholders (§3.2 mockup).
 enum AppNavTab { home, ops, inbox, stats, settings }
 
-/// Shared bottom navigation bar used by top-level screens (Home, Settings, …).
 class AppBottomNavBar extends StatelessWidget {
   const AppBottomNavBar({super.key, required this.activeTab});
 
   final AppNavTab activeTab;
 
   static const _items = [
-    (tab: AppNavTab.home, icon: Icons.home_rounded, label: 'Home'),
-    (tab: AppNavTab.ops, icon: Icons.list_alt_outlined, label: 'Ops'),
+    (tab: AppNavTab.home, icon: Icons.home_outlined, label: 'Home'),
+    (tab: AppNavTab.ops, icon: Icons.format_list_bulleted, label: 'Ops'),
     (tab: AppNavTab.inbox, icon: Icons.inbox_outlined, label: 'Inbox'),
-    (tab: AppNavTab.settings, icon: Icons.tune_outlined, label: 'Settings'),
+    (tab: AppNavTab.settings, icon: Icons.tune, label: 'Settings'),
   ];
 
   void _onTap(BuildContext context, AppNavTab tab) {
@@ -29,7 +28,9 @@ class AppBottomNavBar extends StatelessWidget {
       case AppNavTab.settings:
         context.goNamed(AppRoute.settings.name);
       case AppNavTab.ops:
+        context.goNamed(AppRoute.operations.name);
       case AppNavTab.inbox:
+        context.goNamed(AppRoute.inbox.name);
       case AppNavTab.stats:
         break;
     }
@@ -38,64 +39,85 @@ class AppBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(14, 0, 14, 24),
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      margin: const EdgeInsets.fromLTRB(14, 0, 14, 14),
       decoration: BoxDecoration(
-        color: AppColors.white,
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowBlue.withValues(alpha: 0.12),
+            color: AppColors.shadowBlue.withValues(alpha: 0.14),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: _items.map((item) {
-          final active = item.tab == activeTab;
-          final color = active
-              ? AppColors.accentBlue
-              : AppColors.placeholderGray;
-          return GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => _onTap(context, item.tab),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Icon(item.icon, size: 22, color: color),
-                    if (item.label == 'Inbox')
-                      Positioned(
-                        right: -2,
-                        top: -2,
-                        child: Container(
-                          width: 7,
-                          height: 7,
-                          decoration: const BoxDecoration(
-                            color: AppColors.notificationDot,
-                            shape: BoxShape.circle,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.white.withValues(alpha: 0.55),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: AppColors.white.withValues(alpha: 0.7)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: _items.map((item) {
+                final active = item.tab == activeTab;
+                final color = active
+                    ? AppColors.accentBlue
+                    : AppColors.grayText;
+
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => _onTap(context, item.tab),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Icon(item.icon, size: 22, color: color),
+                            if (item.tab == AppNavTab.inbox)
+                              Positioned(
+                                right: -2,
+                                top: -2,
+                                child: Container(
+                                  width: 7,
+                                  height: 7,
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.notificationDot,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          item.label,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: active
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: color,
                           ),
                         ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  item.label,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                    color: color,
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                );
+              }).toList(),
             ),
-          );
-        }).toList(),
+          ),
+        ),
       ),
     );
   }

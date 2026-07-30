@@ -6,6 +6,8 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../shared/widgets/app_bottom_nav_bar.dart';
 import '../../../../shared/widgets/gradient_background.dart';
 
+/// Домашній екран PecoNote: баланс по всіх рахунках і останні транзакції.
+/// Поки що статичний макет на mock-даних.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -13,37 +15,38 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return GradientBackground(
       child: Stack(
-        // <-- Використовуємо Stack
         children: [
-          // 1. Основний контент
           SafeArea(
-            bottom: false, // <-- Дозволяємо контенту йти до самого низу екрана
+            bottom: false,
             child: Column(
               children: [
                 const Padding(
-                  padding: EdgeInsets.fromLTRB(20, 8, 20, 0),
+                  padding: EdgeInsets.fromLTRB(22, 18, 22, 0),
                   child: _HomeHeader(),
                 ),
                 const Padding(
                   padding: EdgeInsets.fromLTRB(20, 18, 20, 0),
                   child: _BalanceCard(),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 const _CarouselDots(activeIndex: 0, count: 4),
                 const SizedBox(height: 16),
                 Expanded(
-                  // Прибрали Padding по боках, щоб панель була на всю ширину
-                  child: _TransactionsSheet(),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 0),
+                    child: _TransactionsSheet(),
+                  ),
                 ),
               ],
             ),
           ),
 
-          // 2. Навігаційний бар
+          Positioned(right: 26, bottom: 110, child: _AddButton()),
+
           const Positioned(
             left: 0,
             right: 0,
-            bottom: 0, // <-- Притискаємо NavBar до низу екрана
+            bottom: -10,
             child: SafeArea(
               top: false,
               child: AppBottomNavBar(activeTab: AppNavTab.home),
@@ -108,8 +111,8 @@ class _BalanceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      height: 170,
-      padding: const EdgeInsets.fromLTRB(22, 20, 22, 24),
+      height: 186,
+      padding: const EdgeInsets.fromLTRB(22, 20, 22, 22),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: AppColors.white.withValues(alpha: 0.85)),
@@ -167,14 +170,14 @@ class _BalanceCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 52),
           RichText(
             text: const TextSpan(
               children: [
                 TextSpan(
-                  text: '₴ 27 970',
+                  text: '₴ 27 970',
                   style: TextStyle(
-                    fontSize: 34,
+                    fontSize: 32,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textDark,
                     height: 1,
@@ -183,7 +186,7 @@ class _BalanceCard extends StatelessWidget {
                 TextSpan(
                   text: '.70',
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 19,
                     fontWeight: FontWeight.w700,
                     color: AppColors.balanceCentsText,
                     height: 1,
@@ -231,10 +234,35 @@ class _CarouselDots extends StatelessWidget {
   }
 }
 
+class _AddButton extends StatelessWidget {
+  const _AddButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 56,
+      height: 56,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadowBlue.withValues(alpha: 0.22),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: const Icon(Icons.add, color: AppColors.accentBlue, size: 26),
+    );
+  }
+}
+
 class _TransactionsSheet extends StatelessWidget {
   _TransactionsSheet();
 
-  final List<_TransactionData> _transactions = [
+  final List<_TransactionData> _transactions = const [
     _TransactionData(
       emoji: '🛒',
       title: 'Silpo',
@@ -246,7 +274,7 @@ class _TransactionsSheet extends StatelessWidget {
       emoji: '💼',
       title: 'Salary',
       subtitle: 'Income · 09:00',
-      amount: '+₴ 46 000',
+      amount: '+₴ 46 000',
       isIncome: true,
     ),
     _TransactionData(
@@ -267,103 +295,73 @@ class _TransactionsSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-          decoration: BoxDecoration(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.shadowBlue.withValues(alpha: 0.12),
-                blurRadius: 24,
-                offset: const Offset(0, -4),
-              ),
-            ],
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadowBlue.withValues(alpha: 0.12),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
           ),
-
-          child: ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.white.withValues(alpha: 0.55),
-                  border: Border.all(
-                    color: AppColors.white.withValues(alpha: 0.7),
-                  ),
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(32),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-                      child: Row(
-                        children: [
-                          const Text(
-                            'Recent transactions',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textDark,
-                            ),
-                          ),
-                          const Spacer(),
-                          const Text(
-                            'See all',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.accentBlue,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-                      child: _SearchField(),
-                    ),
-                    Expanded(
-                      child: ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 88),
-                        itemCount: _transactions.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 4),
-                        itemBuilder: (context, index) =>
-                            _TransactionTile(data: _transactions[index]),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          right: 20,
-          bottom: 24,
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
           child: Container(
-            width: 56,
-            height: 56,
             decoration: BoxDecoration(
-              color: AppColors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.shadowBlue.withValues(alpha: 0.22),
-                  blurRadius: 18,
-                  offset: const Offset(0, 8),
+              color: AppColors.white.withValues(alpha: 0.55),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: AppColors.white.withValues(alpha: 0.7)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 10),
+                  child: Row(
+                    children: const [
+                      Text(
+                        'Recent transactions',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                      Spacer(),
+                      Text(
+                        'See all',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.accentBlue,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(18, 0, 18, 6),
+                  child: _SearchField(),
+                ),
+                Expanded(
+                  child: ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(18, 6, 18, 110),
+                    itemCount: _transactions.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 2),
+                    itemBuilder: (context, index) =>
+                        _TransactionTile(data: _transactions[index]),
+                  ),
                 ),
               ],
             ),
-            child: const Icon(Icons.add, color: AppColors.accentBlue, size: 26),
           ),
         ),
-      ],
+      ),
     );
   }
 }
@@ -377,8 +375,9 @@ class _SearchField extends StatelessWidget {
       height: 46,
       padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: AppColors.searchFieldBg,
+        color: AppColors.white.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.white.withValues(alpha: 0.75)),
       ),
       child: Row(
         children: [
@@ -388,6 +387,7 @@ class _SearchField extends StatelessWidget {
             child: TextField(
               decoration: const InputDecoration(
                 isDense: true,
+                contentPadding: EdgeInsets.zero,
                 border: InputBorder.none,
                 hintText: 'Search transactions…',
                 hintStyle: TextStyle(
@@ -428,7 +428,7 @@ class _TransactionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 9),
       child: Row(
         children: [
           Container(
@@ -436,10 +436,11 @@ class _TransactionTile extends StatelessWidget {
             height: 44,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: AppColors.balanceGradientEnd,
+              color: AppColors.white.withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.white.withValues(alpha: 0.9)),
             ),
-            child: Text(data.emoji),
+            child: Text(data.emoji, style: const TextStyle(fontSize: 20)),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -470,7 +471,8 @@ class _TransactionTile extends StatelessWidget {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: data.isIncome ? AppColors.income : AppColors.expense,
+              // Витрати — спокійний темний, зелений лише для доходу.
+              color: data.isIncome ? AppColors.income : AppColors.textDark,
             ),
           ),
         ],

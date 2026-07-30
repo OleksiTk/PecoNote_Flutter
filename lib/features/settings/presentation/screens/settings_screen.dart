@@ -1,191 +1,141 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../shared/widgets/app_bottom_nav_bar.dart';
 import '../../../../shared/widgets/gradient_background.dart';
 
-/// Екран налаштувань PecoNote: профіль, статистика та групи параметрів.
-/// Лише статичний макет (mock-дані) — без реальних провайдерів.
+/// Екран налаштувань PecoNote: профіль, статистика, групи параметрів
+/// і небезпечні дії. Поки що статичний макет на mock-даних.
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return GradientBackground(
-      child: SafeArea(
-        child: Column(
-          children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 8, 20, 0),
-              child: _SettingsHeader(),
-            ),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
-                children: const [
-                  _ProfileCard(),
-                  SizedBox(height: 16),
-                  _StatsRow(),
-                  SizedBox(height: 24),
-                  _SettingsSection(
-                    title: 'ACCOUNT',
-                    rows: [
-                      _SettingsRowData(
-                        icon: Icons.email_outlined,
-                        label: 'Email',
-                        value: 'dmytro@example.com',
-                      ),
-                      _SettingsRowData(
-                        icon: Icons.lock_outline,
-                        label: 'Password',
-                        value: '••••••••',
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 20),
-                  _SettingsSection(
-                    title: 'PREFERENCES',
-                    rows: [
-                      _SettingsRowData(
-                        icon: Icons.language_outlined,
-                        label: 'Language',
-                        value: 'English',
-                      ),
-                      _SettingsRowData(
-                        icon: Icons.payments_outlined,
-                        label: 'Default currency',
-                        value: 'UAH ₴',
-                      ),
-                      _SettingsRowData(
-                        icon: Icons.notifications_outlined,
-                        label: 'Push notifications',
-                        trailing: _NotificationsSwitch(),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 20),
-                  _SettingsSection(
-                    title: 'DATA & AUTOMATION',
-                    rows: [
-                      _SettingsRowData(
-                        icon: Icons.category_outlined,
-                        label: 'Categories',
-                      ),
-                      _SettingsRowData(
-                        icon: Icons.rule_outlined,
-                        label: 'Rules',
-                      ),
-                      _SettingsRowData(
-                        icon: Icons.account_balance_outlined,
-                        label: 'Bank connections',
-                      ),
-                      _SettingsRowData(
-                        icon: Icons.download_outlined,
-                        label: 'Export data',
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 20),
-                  _SettingsSection(
-                    title: 'DANGER ZONE',
-                    rows: [
-                      _SettingsRowData(
-                        icon: Icons.logout,
-                        label: 'Log out',
-                        destructive: true,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const AppBottomNavBar(activeTab: AppNavTab.settings),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SettingsHeader extends StatelessWidget {
-  const _SettingsHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Text(
-      'Settings',
-      style: TextStyle(
-        fontSize: 22,
-        fontWeight: FontWeight.w800,
-        color: AppColors.textDark,
-      ),
-    );
-  }
-}
-
-class _ProfileCard extends StatelessWidget {
-  const _ProfileCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.white.withValues(alpha: 0.75),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.white.withValues(alpha: 0.9)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowBlue.withValues(alpha: 0.12),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
+      child: Stack(
         children: [
-          Container(
-            width: 56,
-            height: 56,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: AppColors.accentBlueBg,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.white.withValues(alpha: 0.9)),
-            ),
-            child: const Text(
-              'D',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                color: AppColors.accentBlue,
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Dmytro K.',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textDark,
-                  ),
+          SafeArea(
+            bottom: false,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(22, 16, 22, 120),
+              children: const [
+                _ProfileRow(),
+                SizedBox(height: 20),
+                _StatsRow(),
+                SizedBox(height: 26),
+
+                _SectionLabel('PREFERENCES'),
+                SizedBox(height: 8),
+                _GlassSection(
+                  rows: [
+                    _SettingsRowData(
+                      emoji: '🌐',
+                      label: 'Language',
+                      value: 'English',
+                    ),
+                    _SettingsRowData(
+                      emoji: '💱',
+                      label: 'Default currency',
+                      value: 'UAH ₴',
+                    ),
+                    _SettingsRowData(
+                      emoji: '🎨',
+                      label: 'Theme',
+                      value: 'Light',
+                    ),
+                    _SettingsRowData(
+                      emoji: '🔔',
+                      label: 'Notifications',
+                      trailing: _NotificationsSwitch(),
+                    ),
+                  ],
                 ),
-                SizedBox(height: 2),
-                Text(
-                  'dmytro@example.com',
-                  style: TextStyle(fontSize: 13, color: AppColors.grayText),
+                SizedBox(height: 24),
+
+                _SectionLabel('DATA & MEMORY'),
+                SizedBox(height: 8),
+                _GlassSection(
+                  rows: [
+                    _SettingsRowData(emoji: '🧹', label: 'Clear card history'),
+                    _SettingsRowData(
+                      emoji: '📤',
+                      label: 'Export data',
+                      value: 'CSV',
+                    ),
+                  ],
                 ),
+                SizedBox(height: 22),
+
+                _DangerSection(),
               ],
             ),
           ),
+
+          const Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SafeArea(
+              top: false,
+              child: AppBottomNavBar(activeTab: AppNavTab.settings),
+            ),
+          ),
         ],
       ),
+    );
+  }
+}
+
+/// Аватар + ім'я та email. Без картки — просто на градієнті.
+class _ProfileRow extends StatelessWidget {
+  const _ProfileRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 64,
+          height: 64,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: AppColors.white.withValues(alpha: 0.7),
+            shape: BoxShape.circle,
+            border: Border.all(color: AppColors.white.withValues(alpha: 0.9)),
+          ),
+          child: const Text(
+            'D',
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w700,
+              color: AppColors.accentBlue,
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        const Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Daryna Kovalenko',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textDark,
+                ),
+              ),
+              SizedBox(height: 3),
+              Text(
+                'daryna.k@gmail.com',
+                style: TextStyle(fontSize: 13, color: AppColors.grayText),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -197,13 +147,21 @@ class _StatsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Row(
       children: [
-        Expanded(child: _StatChip(value: '128', label: 'Days with us')),
+        Expanded(
+          child: _StatChip(value: '214', label: 'Days\nwith us'),
+        ),
         SizedBox(width: 10),
-        Expanded(child: _StatChip(value: '412', label: 'Transactions')),
+        Expanded(
+          child: _StatChip(value: '3 482', label: 'Total\ntransactions'),
+        ),
         SizedBox(width: 10),
-        Expanded(child: _StatChip(value: '3', label: 'Accounts')),
+        Expanded(
+          child: _StatChip(value: '4', label: 'Active\naccounts'),
+        ),
         SizedBox(width: 10),
-        Expanded(child: _StatChip(value: '9', label: 'Rules')),
+        Expanded(
+          child: _StatChip(value: '12', label: 'Rules\ncreated'),
+        ),
       ],
     );
   }
@@ -217,30 +175,64 @@ class _StatChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
-      decoration: BoxDecoration(
-        color: AppColors.white.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.white.withValues(alpha: 0.9)),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+          decoration: BoxDecoration(
+            color: AppColors.white.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppColors.white.withValues(alpha: 0.7)),
+          ),
+          child: Column(
+            children: [
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textDark,
+                  height: 1,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 10,
+                  height: 1.25,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.grayText,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textDark,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 10.5, color: AppColors.grayText),
-          ),
-        ],
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 6),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: AppColors.grayText,
+          letterSpacing: 1,
+        ),
       ),
     );
   }
@@ -248,64 +240,59 @@ class _StatChip extends StatelessWidget {
 
 class _SettingsRowData {
   const _SettingsRowData({
-    required this.icon,
+    required this.emoji,
     required this.label,
     this.value,
     this.trailing,
     this.destructive = false,
+    this.iconWidget,
   });
 
-  final IconData icon;
+  final String emoji;
   final String label;
   final String? value;
   final Widget? trailing;
   final bool destructive;
+
+  /// Якщо задано — замість емодзі малюється цей віджет (для danger-рядків).
+  final Widget? iconWidget;
 }
 
-class _SettingsSection extends StatelessWidget {
-  const _SettingsSection({required this.title, required this.rows});
+/// Скляна група рядків налаштувань.
+class _GlassSection extends StatelessWidget {
+  const _GlassSection({required this.rows, this.tint});
 
-  final String title;
   final List<_SettingsRowData> rows;
+  final Color? tint;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w700,
-              color: AppColors.grayText,
-              letterSpacing: 0.8,
-            ),
-          ),
-        ),
-        Container(
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(22),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 26, sigmaY: 26),
+        child: Container(
           decoration: BoxDecoration(
-            color: AppColors.white.withValues(alpha: 0.75),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.white.withValues(alpha: 0.9)),
+            color: (tint ?? AppColors.white).withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: AppColors.white.withValues(alpha: 0.7)),
           ),
           child: Column(
             children: [
               for (var i = 0; i < rows.length; i++) ...[
                 _SettingsRow(data: rows[i]),
                 if (i != rows.length - 1)
-                  const Divider(
+                  Divider(
                     height: 1,
-                    indent: 56,
-                    color: AppColors.subChipBorder,
+                    indent: 54,
+                    endIndent: 16,
+                    color: AppColors.white.withValues(alpha: 0.55),
                   ),
               ],
             ],
           ),
         ),
-      ],
+      ),
     );
   }
 }
@@ -317,54 +304,99 @@ class _SettingsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final labelColor = data.destructive ? AppColors.expense : AppColors.textDark;
+    final labelColor = data.destructive
+        ? AppColors.notificationDot
+        : AppColors.textDark;
+
     return Material(
-      color: AppColors.transparent,
+      color: Colors.transparent,
       child: InkWell(
         onTap: () {},
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
           child: Row(
             children: [
-              Icon(
-                data.icon,
-                size: 20,
-                color: data.destructive ? AppColors.expense : AppColors.grayText,
+              SizedBox(
+                width: 22,
+                child:
+                    data.iconWidget ??
+                    Text(data.emoji, style: const TextStyle(fontSize: 16)),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: Text(
                   data.label,
                   style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
                     color: labelColor,
                   ),
                 ),
               ),
               if (data.trailing != null)
                 data.trailing!
-              else if (data.value != null) ...[
-                Text(
-                  data.value!,
-                  style: const TextStyle(fontSize: 13, color: AppColors.grayText),
-                ),
-                const SizedBox(width: 6),
-                const Icon(
-                  Icons.chevron_right,
-                  size: 18,
-                  color: AppColors.placeholderGray,
-                ),
-              ] else if (!data.destructive)
-                const Icon(
-                  Icons.chevron_right,
-                  size: 18,
-                  color: AppColors.placeholderGray,
-                ),
+              else ...[
+                if (data.value != null)
+                  Text(
+                    data.value!,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: data.destructive
+                          ? FontWeight.w600
+                          : FontWeight.w500,
+                      color: data.destructive
+                          ? AppColors.notificationDot.withValues(alpha: 0.7)
+                          : AppColors.grayText,
+                    ),
+                  ),
+                if (!data.destructive) ...[
+                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.chevron_right,
+                    size: 18,
+                    color: AppColors.placeholderGray,
+                  ),
+                ],
+              ],
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Log out + Delete account у теплому рожевому склі.
+class _DangerSection extends StatelessWidget {
+  const _DangerSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return _GlassSection(
+      tint: const Color(0xFFFFE0DA),
+      rows: const [
+        _SettingsRowData(
+          emoji: '',
+          label: 'Log out',
+          destructive: true,
+          iconWidget: Icon(
+            Icons.logout,
+            size: 18,
+            color: AppColors.notificationDot,
+          ),
+        ),
+        _SettingsRowData(
+          emoji: '',
+          label: 'Delete account',
+          value: 'permanent',
+          destructive: true,
+          iconWidget: Icon(
+            Icons.close,
+            size: 18,
+            color: AppColors.notificationDot,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -381,11 +413,38 @@ class _NotificationsSwitchState extends State<_NotificationsSwitch> {
 
   @override
   Widget build(BuildContext context) {
-    return Switch(
-      value: _enabled,
-      activeThumbColor: AppColors.white,
-      activeTrackColor: AppColors.accentBlue,
-      onChanged: (value) => setState(() => _enabled = value),
+    return GestureDetector(
+      onTap: () => setState(() => _enabled = !_enabled),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        width: 48,
+        height: 28,
+        padding: const EdgeInsets.all(3),
+        alignment: _enabled ? Alignment.centerRight : Alignment.centerLeft,
+        decoration: BoxDecoration(
+          color: _enabled
+              ? AppColors.success.withValues(alpha: 0.55)
+              : AppColors.placeholderGray.withValues(alpha: 0.35),
+          borderRadius: BorderRadius.circular(99),
+          border: Border.all(color: AppColors.white.withValues(alpha: 0.8)),
+        ),
+        child: Container(
+          width: 22,
+          height: 22,
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.shadowBlue.withValues(alpha: 0.25),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

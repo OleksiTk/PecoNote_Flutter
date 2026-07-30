@@ -17,6 +17,8 @@ enum AppRoute {
   monobankRulesCreated('/start/connect-monobank/rules-created'),
   ready('/ready'),
   home('/home'),
+  operations('/operations'),
+  inbox('/inbox'),
   settings('/settings');
 
   const AppRoute(this.path);
