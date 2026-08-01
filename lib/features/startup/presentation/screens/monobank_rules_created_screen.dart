@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -70,41 +68,40 @@ class MonobankRulesCreatedScreen extends StatelessWidget {
               const SizedBox(height: 26),
               ClipRRect(
                 borderRadius: BorderRadius.circular(20),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 18,
+                // Плоский колір замість BackdropFilter — під анімованим
+                // фоном лише плями градієнта без деталей.
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 18,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.white.withValues(alpha: 0.62),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: AppColors.white.withValues(alpha: 0.7),
                     ),
-                    decoration: BoxDecoration(
-                      color: AppColors.white.withValues(alpha: 0.45),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: AppColors.white.withValues(alpha: 0.7),
+                  ),
+                  child: const Row(
+                    children: [
+                      _StatColumn(
+                        value: '$_paymentsImported',
+                        label: 'payments\nimported',
+                        color: AppColors.textDark,
                       ),
-                    ),
-                    child: Row(
-                      children: [
-                        _StatColumn(
-                          value: '$_paymentsImported',
-                          label: 'payments\nimported',
-                          color: AppColors.textDark,
-                        ),
-                        _StatDivider(),
-                        _StatColumn(
-                          value: '$_sortedByYou',
-                          label: 'sorted\nby you',
-                          color: AppColors.textDark,
-                        ),
-                        _StatDivider(),
-                        _StatColumn(
-                          value: '$_rulesCreated',
-                          label: 'rules\ncreated',
-                          color: AppColors.success,
-                        ),
-                      ],
-                    ),
+                      _StatDivider(),
+                      _StatColumn(
+                        value: '$_sortedByYou',
+                        label: 'sorted\nby you',
+                        color: AppColors.textDark,
+                      ),
+                      _StatDivider(),
+                      _StatColumn(
+                        value: '$_rulesCreated',
+                        label: 'rules\ncreated',
+                        color: AppColors.success,
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -166,6 +163,8 @@ class _StatColumn extends StatelessWidget {
 }
 
 class _StatDivider extends StatelessWidget {
+  const _StatDivider();
+
   @override
   Widget build(BuildContext context) {
     return Container(width: 1, height: 34, color: AppColors.subChipBorder);

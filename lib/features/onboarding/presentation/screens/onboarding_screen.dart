@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -201,20 +200,20 @@ class _CategoriesIllustration extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
+    return const Stack(
       children: [
-        const Positioned(
+        Positioned(
           right: 10,
           top: 0,
           child: _Chip(emoji: '🎮', label: 'Fun'),
         ),
-        const Positioned(
+        Positioned(
           left: 0,
           top: 60,
           child: _Chip(emoji: '🚕', label: 'Transport'),
         ),
         Positioned(left: 0, right: 0, top: 130, child: _TransactionCard()),
-        const Positioned(
+        Positioned(
           right: 20,
           top: 320,
           child: _Chip(emoji: '☕️', label: 'Cafés'),
@@ -247,35 +246,32 @@ class _Chip extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(99),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: AppColors.white.withValues(alpha: 0.55),
-              borderRadius: BorderRadius.circular(99),
-              border: Border.all(
-                color: AppColors.white.withValues(alpha: 0.70),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (emoji != null)
-                  Text(emoji!, style: const TextStyle(fontSize: 16))
-                else
-                  Icon(icon, size: 16, color: AppColors.textDark),
-                const SizedBox(width: 6),
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textDark,
-                  ),
+        // Плоский колір замість BackdropFilter — під плямами градієнта
+        // немає деталей, тож блюр тут нічого не додає візуально.
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppColors.white.withValues(alpha: 0.72),
+            borderRadius: BorderRadius.circular(99),
+            border: Border.all(color: AppColors.white.withValues(alpha: 0.70)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (emoji != null)
+                Text(emoji!, style: const TextStyle(fontSize: 16))
+              else
+                Icon(icon, size: 16, color: AppColors.textDark),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textDark,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -301,80 +297,76 @@ class _TransactionCard extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-          child: Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: AppColors.white.withValues(alpha: 0.45),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: AppColors.white.withValues(alpha: 0.65),
-              ),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: AppColors.white.withValues(alpha: 0.75),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: AppColors.white.withValues(alpha: 0.8),
+        // Плоский колір замість BackdropFilter — див. коментар у _Chip.
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: AppColors.white.withValues(alpha: 0.62),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: AppColors.white.withValues(alpha: 0.65)),
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withValues(alpha: 0.75),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: AppColors.white.withValues(alpha: 0.8),
+                      ),
+                    ),
+                    child: const Text('🍞', style: TextStyle(fontSize: 20)),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'SILPO',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textDark,
+                          ),
                         ),
-                      ),
-                      child: const Text('🍞', style: TextStyle(fontSize: 20)),
-                    ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'SILPO',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textDark,
-                            ),
+                        SizedBox(height: 2),
+                        Text(
+                          'yesterday',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.grayText,
                           ),
-                          SizedBox(height: 2),
-                          Text(
-                            'yesterday',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.grayText,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    const Text(
-                      '−₴ 486',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textDark,
-                      ),
+                  ),
+                  const Text(
+                    '−₴ 486',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textDark,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                const Row(
-                  children: [
-                    _SubChip(label: 'Food', selected: true),
-                    SizedBox(width: 8),
-                    _SubChip(label: 'Cafés'),
-                    SizedBox(width: 8),
-                    _SubChip(label: 'Other…'),
-                  ],
-                ),
-              ],
-            ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Row(
+                children: [
+                  _SubChip(label: 'Food', selected: true),
+                  SizedBox(width: 8),
+                  _SubChip(label: 'Cafés'),
+                  SizedBox(width: 8),
+                  _SubChip(label: 'Other…'),
+                ],
+              ),
+            ],
           ),
         ),
       ),
@@ -416,14 +408,14 @@ class _SyncIllustration extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       children: [
         _FlowCard(
           iconBg: AppColors.accentBlueBg,
           emoji: '🏦',
           title: 'Monobank',
           subtitle: '14 new payments',
-          trailing: const Text(
+          trailing: Text(
             'auto',
             style: TextStyle(
               fontSize: 12,
@@ -432,13 +424,13 @@ class _SyncIllustration extends StatelessWidget {
             ),
           ),
         ),
-        const _FlowArrow(length: 28),
+        _FlowArrow(length: 28),
         _FlowCard(
           iconBg: AppColors.iconBgMintLight,
           emoji: '⚙️',
           title: 'Your rules',
           subtitle: '"SILPO → Food", 11 more',
-          trailing: const Text(
+          trailing: Text(
             '✓13',
             style: TextStyle(
               fontSize: 12,
@@ -447,7 +439,7 @@ class _SyncIllustration extends StatelessWidget {
             ),
           ),
         ),
-        const _FlowArrow(length: 28),
+        _FlowArrow(length: 28),
         _FlowCard(
           iconBg: AppColors.iconBgOrange,
           emoji: '🏷️',
@@ -499,59 +491,55 @@ class _FlowCard extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 26, sigmaY: 26),
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.white.withValues(alpha: 0.45),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: AppColors.white.withValues(alpha: 0.65),
+        // Плоский колір замість BackdropFilter — див. коментар у _Chip.
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.white.withValues(alpha: 0.62),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.white.withValues(alpha: 0.65)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppColors.white.withValues(alpha: 0.6),
+                  ),
+                ),
+                child: Text(emoji, style: const TextStyle(fontSize: 18)),
               ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: iconBg,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppColors.white.withValues(alpha: 0.6),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textDark,
+                      ),
                     ),
-                  ),
-                  child: Text(emoji, style: const TextStyle(fontSize: 18)),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textDark,
-                        ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: subtitleColor ?? AppColors.grayText,
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: subtitleColor ?? AppColors.grayText,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                if (trailing != null) trailing!,
-              ],
-            ),
+              ),
+              ?trailing,
+            ],
           ),
         ),
       ),

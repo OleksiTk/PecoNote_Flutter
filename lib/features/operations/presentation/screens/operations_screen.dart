@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
@@ -13,31 +11,31 @@ class OperationsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GradientBackground(
+    return const GradientBackground(
       child: Stack(
         children: [
           SafeArea(
             bottom: false,
             child: Column(
               children: [
-                const Padding(
+                Padding(
                   padding: EdgeInsets.fromLTRB(22, 18, 22, 0),
                   child: _OperationsHeader(),
                 ),
-                const SizedBox(height: 16),
-                const Padding(
+                SizedBox(height: 16),
+                Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20),
                   child: _SearchRow(),
                 ),
-                const SizedBox(height: 12),
-                const Padding(
+                SizedBox(height: 12),
+                Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20),
                   child: _FilterChipsRow(),
                 ),
-                const SizedBox(height: 14),
+                SizedBox(height: 14),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 0),
+                    padding: EdgeInsets.fromLTRB(14, 0, 14, 0),
                     child: _OperationsSheet(),
                   ),
                 ),
@@ -45,7 +43,7 @@ class OperationsScreen extends StatelessWidget {
             ),
           ),
 
-          const Positioned(
+          Positioned(
             left: 0,
             right: 0,
             bottom: -10,
@@ -65,9 +63,9 @@ class _OperationsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return const Row(
       children: [
-        const Text(
+        Text(
           'Operations',
           style: TextStyle(
             fontSize: 26,
@@ -75,9 +73,9 @@ class _OperationsHeader extends StatelessWidget {
             color: AppColors.textDark,
           ),
         ),
-        const Spacer(),
+        Spacer(),
         Row(
-          children: const [
+          children: [
             Text(
               'June 2026',
               style: TextStyle(
@@ -103,20 +101,16 @@ class _SearchRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return const Row(
       children: [
         Expanded(
           child: _GlassField(
             height: 50,
             borderRadius: 18,
             child: Row(
-              children: const [
+              children: [
                 SizedBox(width: 14),
-                Icon(
-                  Icons.search,
-                  size: 20,
-                  color: AppColors.placeholderGray,
-                ),
+                Icon(Icons.search, size: 20, color: AppColors.placeholderGray),
                 SizedBox(width: 8),
                 Expanded(
                   child: TextField(
@@ -130,10 +124,7 @@ class _SearchRow extends StatelessWidget {
                         fontSize: 14,
                       ),
                     ),
-                    style: TextStyle(
-                      color: AppColors.textDark,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: AppColors.textDark, fontSize: 14),
                   ),
                 ),
                 SizedBox(width: 14),
@@ -141,8 +132,8 @@ class _SearchRow extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 10),
-        const _FilterButton(count: 2),
+        SizedBox(width: 10),
+        _FilterButton(count: 2),
       ],
     );
   }
@@ -161,10 +152,10 @@ class _FilterButton extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          _GlassField(
+          const _GlassField(
             height: 50,
             borderRadius: 18,
-            child: const Center(
+            child: Center(
               child: Icon(
                 Icons.tune_rounded,
                 size: 20,
@@ -214,17 +205,16 @@ class _GlassField extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          height: height,
-          decoration: BoxDecoration(
-            color: AppColors.white.withValues(alpha: 0.6),
-            borderRadius: BorderRadius.circular(borderRadius),
-            border: Border.all(color: AppColors.white.withValues(alpha: 0.8)),
-          ),
-          child: child,
+      // Плоский колір замість BackdropFilter: пошук і фільтр показані
+      // одночасно поверх постійно анімованого фону.
+      child: Container(
+        height: height,
+        decoration: BoxDecoration(
+          color: AppColors.white.withValues(alpha: 0.78),
+          borderRadius: BorderRadius.circular(borderRadius),
+          border: Border.all(color: AppColors.white.withValues(alpha: 0.8)),
         ),
+        child: child,
       ),
     );
   }
@@ -235,10 +225,10 @@ class _FilterChipsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
+    return const SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
-        children: const [
+        children: [
           _FilterChip(emoji: '🌮', label: 'Food'),
           SizedBox(width: 8),
           _FilterChip(dotColor: Colors.black, label: 'Black •4421'),
@@ -277,7 +267,10 @@ class _FilterChip extends StatelessWidget {
             Container(
               width: 10,
               height: 10,
-              decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
+              decoration: BoxDecoration(
+                color: dotColor,
+                shape: BoxShape.circle,
+              ),
             ),
             const SizedBox(width: 6),
           ],
@@ -317,9 +310,9 @@ class _ClearAllChip extends StatelessWidget {
 }
 
 class _OperationsSheet extends StatelessWidget {
-  _OperationsSheet();
+  const _OperationsSheet();
 
-  final List<_DaySection> _days = const [
+  static const List<_DaySection> _days = [
     _DaySection(
       label: 'TODAY · 11 JUL',
       total: '−₴ 828',
@@ -380,26 +373,25 @@ class _OperationsSheet extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(28),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppColors.white.withValues(alpha: 0.55),
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: AppColors.white.withValues(alpha: 0.7)),
-            ),
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 110),
-              children: [
-                for (final day in _days) ...[
-                  _DayHeaderRow(day: day),
-                  const SizedBox(height: 4),
-                  for (final tx in day.transactions) _TransactionTile(data: tx),
-                  const SizedBox(height: 14),
-                ],
-                const Center(child: _LoadEarlierLink()),
+        // Плоский колір замість BackdropFilter: цей лист одночасно з
+        // навбаром і пошуком блюрив тло на кожен кадр анімації.
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.white.withValues(alpha: 0.75),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: AppColors.white.withValues(alpha: 0.7)),
+          ),
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 110),
+            children: [
+              for (final day in _days) ...[
+                _DayHeaderRow(day: day),
+                const SizedBox(height: 4),
+                for (final tx in day.transactions) _TransactionTile(data: tx),
+                const SizedBox(height: 14),
               ],
-            ),
+              const Center(child: _LoadEarlierLink()),
+            ],
           ),
         ),
       ),

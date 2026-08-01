@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -180,50 +178,46 @@ class _CardRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(18),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-        child: Material(
-          color: AppColors.white.withValues(alpha: 0.4),
-          child: InkWell(
-            onTap: onTap,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: AppColors.white.withValues(alpha: 0.7),
-                ),
-              ),
-              child: Row(
-                children: [
-                  _CardGlyph(isBusiness: card.isBusiness),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${card.label} •${card.last4}',
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textDark,
-                          ),
+      // Плоский колір замість BackdropFilter: до 3 карток одночасно на екрані.
+      child: Material(
+        color: AppColors.white.withValues(alpha: 0.6),
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppColors.white.withValues(alpha: 0.7)),
+            ),
+            child: Row(
+              children: [
+                _CardGlyph(isBusiness: card.isBusiness),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${card.label} •${card.last4}',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textDark,
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '${card.currency} · ${card.tag}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.grayText,
-                          ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${card.currency} · ${card.tag}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.grayText,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  _SelectionMark(selected: selected),
-                ],
-              ),
+                ),
+                _SelectionMark(selected: selected),
+              ],
             ),
           ),
         ),

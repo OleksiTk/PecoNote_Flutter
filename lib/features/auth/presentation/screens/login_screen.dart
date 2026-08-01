@@ -23,6 +23,8 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
+  late final TapGestureRecognizer _registerTap = TapGestureRecognizer()
+    ..onTap = () => context.goNamed(AppRoute.register.name);
   bool _loading = false;
   String? _error;
 
@@ -30,6 +32,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void dispose() {
     _email.dispose();
     _password.dispose();
+    _registerTap.dispose();
     super.dispose();
   }
 
@@ -162,9 +165,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           color: AppColors.accentBlueMuted,
                           fontWeight: FontWeight.bold,
                         ),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () =>
-                              context.goNamed(AppRoute.register.name),
+                        recognizer: _registerTap,
                       ),
                     ],
                   ),

@@ -1,4 +1,6 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 
 class GradientBackground extends StatefulWidget {
@@ -19,10 +21,6 @@ class GradientBackground extends StatefulWidget {
 
 class _GradientBackgroundState extends State<GradientBackground>
     with SingleTickerProviderStateMixin {
-  // Наскільки далеко центр плями відходить від центру екрана (частка від W/H).
-  static const _travel = 0.5;
-  static const _phaseStep = math.pi / 2; // 90° між шарами
-
   late final AnimationController _controller;
 
   @override
@@ -35,10 +33,16 @@ class _GradientBackgroundState extends State<GradientBackground>
   void didChangeDependencies() {
     super.didChangeDependencies();
     final reduce = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    final isCurrent = ModalRoute.of(context)?.isCurrent ?? true;
+
     if (reduce) {
       _controller
         ..stop()
         ..value = 0;
+    } else if (!isCurrent) {
+      // Covered by another route (pushed on top) — no point animating
+      // something nobody can see.
+      _controller.stop();
     } else if (!_controller.isAnimating) {
       _controller.repeat();
     }
@@ -56,87 +60,80 @@ class _GradientBackgroundState extends State<GradientBackground>
 
     return Scaffold(
       backgroundColor: const Color(0xFFDCE2EC), // база як у CSS
-      body: LayoutBuilder(
-        builder: (context, c) {
-          final w = c.maxWidth;
-          final h = c.maxHeight;
-          // Пляма — коло діаметром 1.2 екрана (аналог 60% від 200%-тайла).
-          final blobSize = math.max(w, h) * 1.2;
-
-          return Stack(
-            fit: StackFit.expand,
-            children: [
-              AnimatedBuilder(
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Isolated in its own layer: this is the only part of the tree
+          // that actually needs to repaint every animation tick.
+          RepaintBoundary(
+            child: CustomPaint(
+              painter: _BlobsPainter(
                 animation: _controller,
-                builder: (context, _) {
-                  final t = _controller.value * 2 * math.pi;
-                  return Stack(
-                    children: [
-                      _blob(
-                        const Color(0xFF9EC7FF),
-                        blobSize,
-                        w,
-                        h,
-                        t,
-                        0,
-                        topOpacity,
-                      ),
-                      _blob(
-                        const Color(0xFFFFC9AE),
-                        blobSize,
-                        w,
-                        h,
-                        t,
-                        1,
-                        topOpacity,
-                      ),
-                      _blob(const Color(0xFFA6EFCB), blobSize, w, h, t, 2, 1.0),
-                      _blob(const Color(0xFFF7BEDD), blobSize, w, h, t, 3, 1.0),
-                    ],
-                  );
-                },
+                topOpacity: topOpacity,
               ),
-              widget.child,
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  /// Центр плями їде по еліпсу навколо центру екрана:
-  ///   cx = 0.5 + travel·sin(t + φ)
-  ///   cy = 0.5 + travel·cos(t + φ)
-  Widget _blob(
-    Color color,
-    double size,
-    double w,
-    double h,
-    double t,
-    int layer,
-    double opacity,
-  ) {
-    final phase = t + layer * _phaseStep;
-    final cx = (0.5 + _travel * math.sin(phase)) * w;
-    final cy = (0.5 + _travel * math.cos(phase)) * h;
-
-    return Positioned(
-      left: cx - size / 2,
-      top: cy - size / 2,
-      child: Opacity(
-        opacity: opacity,
-        child: Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RadialGradient(
-              colors: [color, color.withValues(alpha: 0)],
-              stops: const [0.0, 0.62], // "transparent 62%" з CSS
             ),
           ),
-        ),
+          RepaintBoundary(child: widget.child),
+        ],
       ),
     );
   }
+}
+
+/// Малює 4 плями одним шаром замість 4 окремих Container/Opacity —
+/// менше офскрін-компоузу на слабких GPU.
+class _BlobsPainter extends CustomPainter {
+  _BlobsPainter({required this.animation, required this.topOpacity})
+    : super(repaint: animation);
+
+  final Animation<double> animation;
+  final double topOpacity;
+
+  // Наскільки далеко центр плями відходить від центру екрана (частка від W/H).
+  static const _travel = 0.5;
+  static const _phaseStep = math.pi / 2; // 90° між шарами
+  static const _stops = [0.0, 0.62]; // "transparent 62%" з CSS
+  static const _colors = [
+    Color(0xFF9EC7FF),
+    Color(0xFFFFC9AE),
+    Color(0xFFA6EFCB),
+    Color(0xFFF7BEDD),
+  ];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    // Пляма — коло діаметром 1.2 екрана (аналог 60% від 200%-тайла).
+    final radius = math.max(w, h) * 1.2 / 2;
+    final t = animation.value * 2 * math.pi;
+
+    for (var layer = 0; layer < _colors.length; layer++) {
+      final opacity = layer < 2 ? topOpacity : 1.0;
+      if (opacity <= 0) continue;
+
+      // Центр плями їде по еліпсу навколо центру екрана:
+      //   cx = 0.5 + travel·sin(t + φ)
+      //   cy = 0.5 + travel·cos(t + φ)
+      final phase = t + layer * _phaseStep;
+      final center = Offset(
+        (0.5 + _travel * math.sin(phase)) * w,
+        (0.5 + _travel * math.cos(phase)) * h,
+      );
+      final color = _colors[layer];
+
+      final paint = Paint()
+        ..shader = ui.Gradient.radial(center, radius, [
+          color.withValues(alpha: opacity),
+          color.withValues(alpha: 0),
+        ], _stops);
+
+      canvas.drawCircle(center, radius, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _BlobsPainter oldDelegate) =>
+      oldDelegate.animation != animation ||
+      oldDelegate.topOpacity != topOpacity;
 }

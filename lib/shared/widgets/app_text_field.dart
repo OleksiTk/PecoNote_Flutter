@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 import '../../app/theme/app_colors.dart';
@@ -53,85 +51,79 @@ class _AppTextFieldState extends State<AppTextField> {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(20),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 26, sigmaY: 26),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                // Плоский колір замість BackdropFilter — форми з 2+ полями
+                // одночасно блюрили тло на кожен кадр анімації.
+                color: AppColors.white.withValues(alpha: 0.65),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: hasError
+                      ? AppColors.error.withValues(alpha: 0.5)
+                      : AppColors.white.withValues(alpha: 0.70),
                 ),
-                decoration: BoxDecoration(
-                  color: AppColors.white.withValues(alpha: 0.45),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: hasError
-                        ? AppColors.error.withValues(alpha: 0.5)
-                        : AppColors.white.withValues(alpha: 0.70),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.label,
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.grayText,
-                              letterSpacing: 0.8,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          TextField(
-                            controller: widget.controller,
-                            enabled: widget.enabled,
-                            obscureText: widget.obscurable && _obscured,
-                            keyboardType: widget.keyboardType,
-                            textInputAction: widget.textInputAction,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              color: AppColors.textDark,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            decoration: InputDecoration(
-                              isDense: true,
-                              contentPadding: EdgeInsets.zero,
-                              border: InputBorder.none,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                              hintText: widget.hintText,
-                              hintStyle: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.textDark.withValues(
-                                  alpha: 0.35,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (widget.obscurable)
-                      GestureDetector(
-                        onTap: () => setState(() => _obscured = !_obscured),
-                        behavior: HitTestBehavior.opaque,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 8),
-                          child: Icon(
-                            _obscured
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                            size: 20,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.label,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
                             color: AppColors.grayText,
+                            letterSpacing: 0.8,
                           ),
                         ),
+                        const SizedBox(height: 4),
+                        TextField(
+                          controller: widget.controller,
+                          enabled: widget.enabled,
+                          obscureText: widget.obscurable && _obscured,
+                          keyboardType: widget.keyboardType,
+                          textInputAction: widget.textInputAction,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: AppColors.textDark,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          decoration: InputDecoration(
+                            isDense: true,
+                            contentPadding: EdgeInsets.zero,
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            hintText: widget.hintText,
+                            hintStyle: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textDark.withValues(alpha: 0.35),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (widget.obscurable)
+                    GestureDetector(
+                      onTap: () => setState(() => _obscured = !_obscured),
+                      behavior: HitTestBehavior.opaque,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 8),
+                        child: Icon(
+                          _obscured
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          size: 20,
+                          color: AppColors.grayText,
+                        ),
                       ),
-                  ],
-                ),
+                    ),
+                ],
               ),
             ),
           ),

@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
@@ -110,11 +108,11 @@ class _InboxHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          children: const [
+          children: [
             Text(
               'Inbox',
               style: TextStyle(
@@ -134,8 +132,8 @@ class _InboxHeader extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 4),
-        const Text(
+        SizedBox(height: 4),
+        Text(
           '4 tasks need your decision',
           style: TextStyle(fontSize: 13.5, color: AppColors.grayText),
         ),
@@ -149,8 +147,8 @@ class _FilterTabsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: const [
+    return const Row(
+      children: [
         _FilterTab(label: 'All', selected: true),
         SizedBox(width: 8),
         _FilterTab(label: 'Unread', selected: false),
@@ -225,107 +223,103 @@ class _InboxCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(24),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
-          decoration: BoxDecoration(
-            color: AppColors.white.withValues(alpha: 0.55),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: AppColors.white.withValues(alpha: 0.7)),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.shadowBlue.withValues(alpha: 0.1),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: iconBg,
-                  shape: BoxShape.circle,
-                ),
-                child: Text(emoji, style: const TextStyle(fontSize: 18)),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textDark,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      description,
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: AppColors.grayText,
-                        height: 1.35,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _PillButton(label: buttonLabel),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+        decoration: BoxDecoration(
+          // Плоский колір замість BackdropFilter — до 4 таких карток
+          // одночасно на екрані, кожна раніше з власним блюром.
+          color: AppColors.white.withValues(alpha: 0.75),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.white.withValues(alpha: 0.7)),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.shadowBlue.withValues(alpha: 0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
+              child: Text(emoji, style: const TextStyle(fontSize: 18)),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (badgeColor != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 9,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: badgeColor,
-                        borderRadius: BorderRadius.circular(99),
-                      ),
-                      child: Text(
-                        badgeText,
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w700,
-                          color: badgeTextColor ?? AppColors.textDark,
-                        ),
-                      ),
-                    )
-                  else
-                    Text(
-                      badgeText,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.grayText,
-                      ),
-                    ),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: 7,
-                    height: 7,
-                    decoration: BoxDecoration(
-                      color: dotColor,
-                      shape: BoxShape.circle,
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textDark,
                     ),
                   ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      color: AppColors.grayText,
+                      height: 1.35,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _PillButton(label: buttonLabel),
                 ],
               ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (badgeColor != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: badgeColor,
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                    child: Text(
+                      badgeText,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: badgeTextColor ?? AppColors.textDark,
+                      ),
+                    ),
+                  )
+                else
+                  Text(
+                    badgeText,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.grayText,
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                Container(
+                  width: 7,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: dotColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -143,7 +141,8 @@ class _MonobankSortScreenState extends State<MonobankSortScreen> {
     final chosen = await showModalBottomSheet<_Category>(
       context: context,
       backgroundColor: AppColors.transparent,
-      builder: (context) => _CategoryPickerSheet(current: _groups[_index].guess),
+      builder: (context) =>
+          _CategoryPickerSheet(current: _groups[_index].guess),
     );
     if (chosen != null) _advance();
   }
@@ -195,8 +194,7 @@ class _MonobankSortScreenState extends State<MonobankSortScreen> {
                 key: ValueKey(_index),
                 group: group,
                 remember: _remember,
-                onToggleRemember: () =>
-                    setState(() => _remember = !_remember),
+                onToggleRemember: () => setState(() => _remember = !_remember),
                 onConfirmGuess: _advance,
                 onOther: _pickOther,
               ),
@@ -222,26 +220,25 @@ class _MonobankSortScreenState extends State<MonobankSortScreen> {
               if (next != null)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(99),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: AppColors.white.withValues(alpha: 0.4),
-                        borderRadius: BorderRadius.circular(99),
-                        border: Border.all(
-                          color: AppColors.white.withValues(alpha: 0.65),
-                        ),
+                  // Плоский колір замість BackdropFilter: разом з великою
+                  // карткою вище на екрані вже було 2 блюри.
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withValues(alpha: 0.58),
+                      borderRadius: BorderRadius.circular(99),
+                      border: Border.all(
+                        color: AppColors.white.withValues(alpha: 0.65),
                       ),
-                      child: Text(
-                        '${next.merchantEmoji}  next: ${next.merchant}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.grayText,
-                        ),
+                    ),
+                    child: Text(
+                      '${next.merchantEmoji}  next: ${next.merchant}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.grayText,
                       ),
                     ),
                   ),
@@ -301,140 +298,136 @@ class _PaymentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(26),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 26),
-          decoration: BoxDecoration(
-            color: AppColors.white.withValues(alpha: 0.45),
-            borderRadius: BorderRadius.circular(26),
-            border: Border.all(color: AppColors.white.withValues(alpha: 0.7)),
-          ),
-          child: Column(
-            children: [
-              Container(
-                width: 64,
-                height: 64,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: AppColors.white.withValues(alpha: 0.85),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.shadowBlue.withValues(alpha: 0.14),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Text(
-                  group.merchantEmoji,
-                  style: const TextStyle(fontSize: 28),
-                ),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                group.merchant,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.textDark,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '${group.paymentsCount} payments · ${group.card}',
-                style: const TextStyle(fontSize: 13, color: AppColors.grayText),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                '−₴${group.amount}',
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.textDark,
-                ),
-              ),
-              const SizedBox(height: 18),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.searchFieldBg,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Row(
-                  children: [
-                    const Text(
-                      'Peco guesses: ',
-                      style: TextStyle(fontSize: 13, color: AppColors.grayText),
-                    ),
-                    Text(
-                      '${group.guess.emoji} ${group.guess.label}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textDark,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: _ChoiceButton(
-                      label: '✓ ${group.guess.label}',
-                      selected: true,
-                      onTap: onConfirmGuess,
-                    ),
+      // Плоский колір замість BackdropFilter — головна картка екрана,
+      // завжди на весь час сортування поверх анімованого фону.
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 26),
+        decoration: BoxDecoration(
+          color: AppColors.white.withValues(alpha: 0.62),
+          borderRadius: BorderRadius.circular(26),
+          border: Border.all(color: AppColors.white.withValues(alpha: 0.7)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: AppColors.white.withValues(alpha: 0.85),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.shadowBlue.withValues(alpha: 0.14),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _ChoiceButton(
-                      label: 'Other…',
-                      selected: false,
-                      onTap: onOther,
+                ],
+              ),
+              child: Text(
+                group.merchantEmoji,
+                style: const TextStyle(fontSize: 28),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              group.merchant,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                color: AppColors.textDark,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${group.paymentsCount} payments · ${group.card}',
+              style: const TextStyle(fontSize: 13, color: AppColors.grayText),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '−₴${group.amount}',
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+                color: AppColors.textDark,
+              ),
+            ),
+            const SizedBox(height: 18),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.searchFieldBg,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                children: [
+                  const Text(
+                    'Peco guesses: ',
+                    style: TextStyle(fontSize: 13, color: AppColors.grayText),
+                  ),
+                  Text(
+                    '${group.guess.emoji} ${group.guess.label}',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textDark,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
-              GestureDetector(
-                onTap: onToggleRemember,
-                behavior: HitTestBehavior.opaque,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      remember
-                          ? Icons.check_circle
-                          : Icons.radio_button_unchecked,
-                      size: 16,
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: _ChoiceButton(
+                    label: '✓ ${group.guess.label}',
+                    selected: true,
+                    onTap: onConfirmGuess,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _ChoiceButton(
+                    label: 'Other…',
+                    selected: false,
+                    onTap: onOther,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            GestureDetector(
+              onTap: onToggleRemember,
+              behavior: HitTestBehavior.opaque,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    remember
+                        ? Icons.check_circle
+                        : Icons.radio_button_unchecked,
+                    size: 16,
+                    color: remember
+                        ? AppColors.success
+                        : AppColors.grayTextLight,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Remember for future payments',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
                       color: remember
                           ? AppColors.success
                           : AppColors.grayTextLight,
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Remember for future payments',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: remember
-                            ? AppColors.success
-                            : AppColors.grayTextLight,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -455,7 +448,9 @@ class _ChoiceButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: selected ? AppColors.chipSelectedBg : AppColors.white.withValues(alpha: 0.6),
+      color: selected
+          ? AppColors.chipSelectedBg
+          : AppColors.white.withValues(alpha: 0.6),
       borderRadius: BorderRadius.circular(99),
       child: InkWell(
         borderRadius: BorderRadius.circular(99),
@@ -492,60 +487,59 @@ class _CategoryPickerSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
-          decoration: BoxDecoration(
-            color: AppColors.scaffoldVivid.withValues(alpha: 0.92),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.dotInactive,
-                    borderRadius: BorderRadius.circular(99),
-                  ),
+      // BackdropFilter прибрано: фон тут майже непрозорий (alpha 0.92),
+      // тож блюру нічого не видно і він не мав жодного візуального ефекту.
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
+        decoration: BoxDecoration(
+          color: AppColors.scaffoldVivid.withValues(alpha: 0.96),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.dotInactive,
+                  borderRadius: BorderRadius.circular(99),
                 ),
               ),
-              const SizedBox(height: 18),
-              const Text(
-                'Choose a category',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textDark,
-                ),
+            ),
+            const SizedBox(height: 18),
+            const Text(
+              'Choose a category',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textDark,
               ),
-              const SizedBox(height: 12),
-              for (final category in _categories)
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Text(
-                    category.emoji,
-                    style: const TextStyle(fontSize: 20),
-                  ),
-                  title: Text(
-                    category.label,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                  trailing: category.label == current.label
-                      ? const Icon(Icons.check, color: AppColors.success)
-                      : null,
-                  onTap: () => Navigator.of(context).pop(category),
+            ),
+            const SizedBox(height: 12),
+            for (final category in _categories)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Text(
+                  category.emoji,
+                  style: const TextStyle(fontSize: 20),
                 ),
-            ],
-          ),
+                title: Text(
+                  category.label,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                trailing: category.label == current.label
+                    ? const Icon(Icons.check, color: AppColors.success)
+                    : null,
+                onTap: () => Navigator.of(context).pop(category),
+              ),
+          ],
         ),
       ),
     );

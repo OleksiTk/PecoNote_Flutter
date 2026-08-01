@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -52,70 +50,68 @@ class AppBottomNavBar extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(28),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: AppColors.white.withValues(alpha: 0.55),
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: AppColors.white.withValues(alpha: 0.7)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: _items.map((item) {
-                final active = item.tab == activeTab;
-                final color = active
-                    ? AppColors.accentBlue
-                    : AppColors.grayText;
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            // Плоский напівпрозорий колір замість BackdropFilter: під ним
+            // лише гладкий градієнт без деталей, тож розмиття нічого не дає
+            // візуально, а панель показана постійно на 4 екранах.
+            color: AppColors.white.withValues(alpha: 0.75),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: AppColors.white.withValues(alpha: 0.7)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: _items.map((item) {
+              final active = item.tab == activeTab;
+              final color = active ? AppColors.accentBlue : AppColors.grayText;
 
-                return GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => _onTap(context, item.tab),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Icon(item.icon, size: 22, color: color),
-                            if (item.tab == AppNavTab.inbox)
-                              Positioned(
-                                right: -2,
-                                top: -2,
-                                child: Container(
-                                  width: 7,
-                                  height: 7,
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.notificationDot,
-                                    shape: BoxShape.circle,
-                                  ),
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _onTap(context, item.tab),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Icon(item.icon, size: 22, color: color),
+                          if (item.tab == AppNavTab.inbox)
+                            Positioned(
+                              right: -2,
+                              top: -2,
+                              child: Container(
+                                width: 7,
+                                height: 7,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.notificationDot,
+                                  shape: BoxShape.circle,
                                 ),
                               ),
-                          ],
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        item.label,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: active
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          color: color,
                         ),
-                        const SizedBox(height: 5),
-                        Text(
-                          item.label,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: active
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                            color: color,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                );
-              }).toList(),
-            ),
+                ),
+              );
+            }).toList(),
           ),
         ),
       ),

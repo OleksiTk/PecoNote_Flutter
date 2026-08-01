@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -83,7 +81,7 @@ class _MonobankSyncingScreenState extends State<MonobankSyncingScreen>
                           height: 56,
                           child: CircularProgressIndicator(
                             strokeWidth: 3,
-                            valueColor: AlwaysStoppedAnimation(
+                            valueColor: const AlwaysStoppedAnimation(
                               AppColors.accentBlueMuted,
                             ),
                             backgroundColor: AppColors.white.withValues(
@@ -162,47 +160,47 @@ class _MonobankSyncingScreenState extends State<MonobankSyncingScreen>
                   const SizedBox(height: 24),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(18),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
+                    // Плоский колір замість BackdropFilter — панель
+                    // оновлюється щокадру разом з прогресом, а фон під нею
+                    // й так лише плями градієнта без деталей.
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.iconBgMintLight.withValues(
+                          alpha: 0.68,
                         ),
-                        decoration: BoxDecoration(
-                          color: AppColors.iconBgMintLight.withValues(
-                            alpha: 0.5,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: AppColors.white.withValues(alpha: 0.6),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const _SyncRow(
+                            done: true,
+                            label:
+                                'Black •4421 — $_blackImported '
+                                'payments imported',
                           ),
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(
-                            color: AppColors.white.withValues(alpha: 0.6),
+                          const SizedBox(height: 10),
+                          const _SyncRow(
+                            done: true,
+                            label:
+                                'White •8830 — $_whiteImported '
+                                'payments imported',
                           ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _SyncRow(
-                              done: true,
-                              label:
-                                  'Black •4421 — $_blackImported '
-                                  'payments imported',
-                            ),
-                            const SizedBox(height: 10),
-                            _SyncRow(
-                              done: true,
-                              label:
-                                  'White •8830 — $_whiteImported '
-                                  'payments imported',
-                            ),
-                            const SizedBox(height: 10),
-                            _SyncRow(
-                              done: fopDone,
-                              label: fopDone
-                                  ? 'FOP UAH — $fopImported payments imported'
-                                  : 'FOP UAH — importing…',
-                            ),
-                          ],
-                        ),
+                          const SizedBox(height: 10),
+                          _SyncRow(
+                            done: fopDone,
+                            label: fopDone
+                                ? 'FOP UAH — $fopImported payments imported'
+                                : 'FOP UAH — importing…',
+                          ),
+                        ],
                       ),
                     ),
                   ),

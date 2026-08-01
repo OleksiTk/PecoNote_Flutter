@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -54,7 +52,7 @@ class MonobankDoneScreen extends StatelessWidget {
                 width: 56,
                 height: 56,
                 alignment: Alignment.center,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: AppColors.iconBgGreen,
                 ),
@@ -172,50 +170,48 @@ class _StatRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(18),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: (tint ?? AppColors.white).withValues(alpha: 0.45),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: AppColors.white.withValues(alpha: 0.65)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: iconBg,
-                  borderRadius: BorderRadius.circular(11),
-                ),
-                child: Text(emoji, style: const TextStyle(fontSize: 16)),
+      // Плоский колір замість BackdropFilter: 3 такі рядки одночасно на екрані.
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: (tint ?? AppColors.white).withValues(alpha: 0.65),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.white.withValues(alpha: 0.65)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: iconBg,
+                borderRadius: BorderRadius.circular(11),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: tint == null
-                        ? AppColors.textDark
-                        : AppColors.iconFgOrange,
-                  ),
-                ),
-              ),
-              Text(
-                value,
+              child: Text(emoji, style: const TextStyle(fontSize: 16)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
                 style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  color: valueColor,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: tint == null
+                      ? AppColors.textDark
+                      : AppColors.iconFgOrange,
                 ),
               ),
-            ],
-          ),
+            ),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                color: valueColor,
+              ),
+            ),
+          ],
         ),
       ),
     );

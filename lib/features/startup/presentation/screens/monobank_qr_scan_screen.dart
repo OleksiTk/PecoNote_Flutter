@@ -34,8 +34,7 @@ class _MonobankQrScanScreenState extends State<MonobankQrScanScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cutOutSize =
-        MediaQuery.sizeOf(context).width.clamp(0, 480) * 0.68;
+    final cutOutSize = MediaQuery.sizeOf(context).width.clamp(0, 480) * 0.68;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -45,7 +44,9 @@ class _MonobankQrScanScreenState extends State<MonobankQrScanScreen> {
           MobileScanner(controller: _controller, onDetect: _onDetect),
           IgnorePointer(
             child: CustomPaint(
-              painter: _ScannerOverlayPainter(cutOutSize: cutOutSize.toDouble()),
+              painter: _ScannerOverlayPainter(
+                cutOutSize: cutOutSize.toDouble(),
+              ),
             ),
           ),
           SafeArea(
@@ -109,7 +110,9 @@ class _MonobankQrScanScreenState extends State<MonobankQrScanScreen> {
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
                             decoration: TextDecoration.underline,
-                            decorationColor: Colors.white.withValues(alpha: 0.5),
+                            decorationColor: Colors.white.withValues(
+                              alpha: 0.5,
+                            ),
                           ),
                         ),
                       ),
@@ -168,9 +171,15 @@ class _ScannerOverlayPainter extends CustomPainter {
       ..fillType = PathFillType.evenOdd
       ..addRect(Rect.fromLTWH(0, 0, size.width, size.height))
       ..addRRect(
-        RRect.fromRectAndRadius(cutoutRect, const Radius.circular(_cornerRadius)),
+        RRect.fromRectAndRadius(
+          cutoutRect,
+          const Radius.circular(_cornerRadius),
+        ),
       );
-    canvas.drawPath(scrimPath, Paint()..color = Colors.black.withValues(alpha: 0.6));
+    canvas.drawPath(
+      scrimPath,
+      Paint()..color = Colors.black.withValues(alpha: 0.6),
+    );
 
     final bracketPaint = Paint()
       ..color = Colors.white

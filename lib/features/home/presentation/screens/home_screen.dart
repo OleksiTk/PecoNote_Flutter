@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
@@ -13,27 +11,27 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GradientBackground(
+    return const GradientBackground(
       child: Stack(
         children: [
           SafeArea(
             bottom: false,
             child: Column(
               children: [
-                const Padding(
+                Padding(
                   padding: EdgeInsets.fromLTRB(22, 18, 22, 0),
                   child: _HomeHeader(),
                 ),
-                const Padding(
+                Padding(
                   padding: EdgeInsets.fromLTRB(20, 18, 20, 0),
                   child: _BalanceCard(),
                 ),
-                const SizedBox(height: 12),
-                const _CarouselDots(activeIndex: 0, count: 4),
-                const SizedBox(height: 16),
+                SizedBox(height: 12),
+                _CarouselDots(activeIndex: 0, count: 4),
+                SizedBox(height: 16),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 0),
+                    padding: EdgeInsets.fromLTRB(14, 0, 14, 0),
                     child: _TransactionsSheet(),
                   ),
                 ),
@@ -43,7 +41,7 @@ class HomeScreen extends StatelessWidget {
 
           Positioned(right: 26, bottom: 110, child: _AddButton()),
 
-          const Positioned(
+          Positioned(
             left: 0,
             right: 0,
             bottom: -10,
@@ -260,9 +258,9 @@ class _AddButton extends StatelessWidget {
 }
 
 class _TransactionsSheet extends StatelessWidget {
-  _TransactionsSheet();
+  const _TransactionsSheet();
 
-  final List<_TransactionData> _transactions = const [
+  static const List<_TransactionData> _transactions = [
     _TransactionData(
       emoji: '🛒',
       title: 'Silpo',
@@ -309,56 +307,55 @@ class _TransactionsSheet extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(28),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppColors.white.withValues(alpha: 0.55),
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: AppColors.white.withValues(alpha: 0.7)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 10),
-                  child: Row(
-                    children: const [
-                      Text(
-                        'Recent transactions',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textDark,
-                        ),
+        child: Container(
+          decoration: BoxDecoration(
+            // Плоский колір замість BackdropFilter: цей лист одночасно з
+            // навбаром і пошуком блюрив тло на кожен кадр анімації.
+            color: AppColors.white.withValues(alpha: 0.75),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: AppColors.white.withValues(alpha: 0.7)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(18, 18, 18, 10),
+                child: Row(
+                  children: [
+                    Text(
+                      'Recent transactions',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textDark,
                       ),
-                      Spacer(),
-                      Text(
-                        'See all',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.accentBlue,
-                        ),
+                    ),
+                    Spacer(),
+                    Text(
+                      'See all',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.accentBlue,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(18, 0, 18, 6),
-                  child: _SearchField(),
+              ),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(18, 0, 18, 6),
+                child: _SearchField(),
+              ),
+              Expanded(
+                child: ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(18, 6, 18, 110),
+                  itemCount: _transactions.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 2),
+                  itemBuilder: (context, index) =>
+                      _TransactionTile(data: _transactions[index]),
                 ),
-                Expanded(
-                  child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(18, 6, 18, 110),
-                    itemCount: _transactions.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 2),
-                    itemBuilder: (context, index) =>
-                        _TransactionTile(data: _transactions[index]),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -379,13 +376,13 @@ class _SearchField extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.white.withValues(alpha: 0.75)),
       ),
-      child: Row(
+      child: const Row(
         children: [
-          const Icon(Icons.search, size: 20, color: AppColors.placeholderGray),
-          const SizedBox(width: 8),
+          Icon(Icons.search, size: 20, color: AppColors.placeholderGray),
+          SizedBox(width: 8),
           Expanded(
             child: TextField(
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
                 border: InputBorder.none,
@@ -395,7 +392,7 @@ class _SearchField extends StatelessWidget {
                   fontSize: 14,
                 ),
               ),
-              style: const TextStyle(color: AppColors.textDark, fontSize: 14),
+              style: TextStyle(color: AppColors.textDark, fontSize: 14),
             ),
           ),
         ],

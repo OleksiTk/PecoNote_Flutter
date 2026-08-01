@@ -68,6 +68,7 @@ class AuthTokenInterceptor extends QueuedInterceptor {
     return _publicPaths.contains(path) ||
         path.startsWith('/auth/password-reset-confirm/');
   }
+
   final Dio _dio;
   final Dio _refreshDio;
   final SecureTokenStorage _tokenStorage;

@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
@@ -85,45 +83,45 @@ class MonobankErrorScreen extends StatelessWidget {
               const SizedBox(height: 22),
               ClipRRect(
                 borderRadius: BorderRadius.circular(18),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.white.withValues(alpha: 0.4),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                        color: AppColors.white.withValues(alpha: 0.65),
-                      ),
+                // Плоский колір замість BackdropFilter — під анімованим
+                // фоном лише плями градієнта без деталей, тож блюр не
+                // додає нічого візуально.
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.white.withValues(alpha: 0.58),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: AppColors.white.withValues(alpha: 0.65),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'WHAT TO TRY',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.6,
-                            color: AppColors.labelGray,
-                          ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'WHAT TO TRY',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.6,
+                          color: AppColors.labelGray,
                         ),
-                        const SizedBox(height: 10),
-                        for (final tip in _tips)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 6),
-                            child: Text(
-                              '· $tip',
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: AppColors.grayText,
-                                height: 1.5,
-                              ),
+                      ),
+                      const SizedBox(height: 10),
+                      for (final tip in _tips)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: Text(
+                            '· $tip',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: AppColors.grayText,
+                              height: 1.5,
                             ),
                           ),
-                      ],
-                    ),
+                        ),
+                    ],
                   ),
                 ),
               ),

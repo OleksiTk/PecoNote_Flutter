@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -183,52 +181,51 @@ class _PeriodRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(18),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-        child: Material(
-          color: selected
-              ? AppColors.accentBlueBg.withValues(alpha: 0.55)
-              : AppColors.white.withValues(alpha: 0.4),
-          child: InkWell(
-            onTap: onTap,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: selected
-                      ? AppColors.accentBlueMuted.withValues(alpha: 0.6)
-                      : AppColors.white.withValues(alpha: 0.7),
-                ),
+      // Плоский колір замість BackdropFilter: до 5 таких рядків одночасно
+      // на екрані вибору періоду.
+      child: Material(
+        color: selected
+            ? AppColors.accentBlueBg.withValues(alpha: 0.7)
+            : AppColors.white.withValues(alpha: 0.6),
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: selected
+                    ? AppColors.accentBlueMuted.withValues(alpha: 0.6)
+                    : AppColors.white.withValues(alpha: 0.7),
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          period.title,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textDark,
-                          ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        period.title,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textDark,
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          period.subtitle,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.grayText,
-                          ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        period.subtitle,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.grayText,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  _RadioMark(selected: selected),
-                ],
-              ),
+                ),
+                _RadioMark(selected: selected),
+              ],
             ),
           ),
         ),
@@ -292,56 +289,52 @@ class _CustomRangeRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(18),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-        child: Material(
-          color: selected
-              ? AppColors.accentBlueBg.withValues(alpha: 0.55)
-              : AppColors.white.withValues(alpha: 0.4),
-          child: InkWell(
-            onTap: onTap,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: selected
-                      ? AppColors.accentBlue.withValues(alpha: 0.6)
-                      : AppColors.white.withValues(alpha: 0.7),
+      // Плоский колір замість BackdropFilter — див. коментар у _PeriodRow.
+      child: Material(
+        color: selected
+            ? AppColors.accentBlueBg.withValues(alpha: 0.7)
+            : AppColors.white.withValues(alpha: 0.6),
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: selected
+                    ? AppColors.accentBlue.withValues(alpha: 0.6)
+                    : AppColors.white.withValues(alpha: 0.7),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AppColors.accentBlueBg,
+                    borderRadius: BorderRadius.circular(11),
+                  ),
+                  child: const Text('📅', style: TextStyle(fontSize: 18)),
                 ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: AppColors.accentBlueBg,
-                      borderRadius: BorderRadius.circular(11),
-                    ),
-                    child: const Text('📅', style: TextStyle(fontSize: 18)),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: selected
-                            ? AppColors.textDark
-                            : AppColors.grayText,
-                      ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: selected ? AppColors.textDark : AppColors.grayText,
                     ),
                   ),
-                  const Icon(
-                    Icons.chevron_right,
-                    size: 20,
-                    color: AppColors.grayTextLight,
-                  ),
-                ],
-              ),
+                ),
+                const Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: AppColors.grayTextLight,
+                ),
+              ],
             ),
           ),
         ),

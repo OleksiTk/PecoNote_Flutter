@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
@@ -177,39 +175,37 @@ class _StatChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(18),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
-          decoration: BoxDecoration(
-            color: AppColors.white.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: AppColors.white.withValues(alpha: 0.7)),
-          ),
-          child: Column(
-            children: [
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textDark,
-                  height: 1,
-                ),
+      // Плоский колір замість BackdropFilter: 4 такі чіпи одночасно на екрані.
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+        decoration: BoxDecoration(
+          color: AppColors.white.withValues(alpha: 0.68),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.white.withValues(alpha: 0.7)),
+        ),
+        child: Column(
+          children: [
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textDark,
+                height: 1,
               ),
-              const SizedBox(height: 5),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 10,
-                  height: 1.25,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.grayText,
-                ),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 10,
+                height: 1.25,
+                fontWeight: FontWeight.w600,
+                color: AppColors.grayText,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -269,28 +265,27 @@ class _GlassSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(22),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 26, sigmaY: 26),
-        child: Container(
-          decoration: BoxDecoration(
-            color: (tint ?? AppColors.white).withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: AppColors.white.withValues(alpha: 0.7)),
-          ),
-          child: Column(
-            children: [
-              for (var i = 0; i < rows.length; i++) ...[
-                _SettingsRow(data: rows[i]),
-                if (i != rows.length - 1)
-                  Divider(
-                    height: 1,
-                    indent: 54,
-                    endIndent: 16,
-                    color: AppColors.white.withValues(alpha: 0.55),
-                  ),
-              ],
+      // Плоский колір замість BackdropFilter: до 3 таких секцій одночасно
+      // на екрані налаштувань.
+      child: Container(
+        decoration: BoxDecoration(
+          color: (tint ?? AppColors.white).withValues(alpha: 0.68),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: AppColors.white.withValues(alpha: 0.7)),
+        ),
+        child: Column(
+          children: [
+            for (var i = 0; i < rows.length; i++) ...[
+              _SettingsRow(data: rows[i]),
+              if (i != rows.length - 1)
+                Divider(
+                  height: 1,
+                  indent: 54,
+                  endIndent: 16,
+                  color: AppColors.white.withValues(alpha: 0.55),
+                ),
             ],
-          ),
+          ],
         ),
       ),
     );
@@ -372,9 +367,9 @@ class _DangerSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _GlassSection(
-      tint: const Color(0xFFFFE0DA),
-      rows: const [
+    return const _GlassSection(
+      tint: Color(0xFFFFE0DA),
+      rows: [
         _SettingsRowData(
           emoji: '',
           label: 'Log out',

@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 import '../../app/theme/app_colors.dart';
@@ -156,26 +154,26 @@ class GlassBackButton extends StatelessWidget {
       color: AppColors.transparent,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-          child: InkWell(
-            onTap: onPressed,
-            child: Container(
-              width: 34,
-              height: 34,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: AppColors.white.withValues(alpha: 0.45),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppColors.white.withValues(alpha: 0.65),
-                ),
+        child: InkWell(
+          onTap: onPressed,
+          child: Container(
+            width: 34,
+            height: 34,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              // Плоский колір замість BackdropFilter — ця кнопка завжди
+              // з'являється поруч з іншими скляними елементами (поля форм),
+              // тож блюр був зайвим накопиченим коштом.
+              color: AppColors.white.withValues(alpha: 0.65),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.white.withValues(alpha: 0.65),
               ),
-              child: const Icon(
-                Icons.chevron_left,
-                size: 20,
-                color: AppColors.textDark,
-              ),
+            ),
+            child: const Icon(
+              Icons.chevron_left,
+              size: 20,
+              color: AppColors.textDark,
             ),
           ),
         ),

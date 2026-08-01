@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -181,17 +179,16 @@ class _IconBadge extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-          child: Container(
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: AppColors.white.withValues(alpha: 0.55),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.white.withValues(alpha: 0.7)),
-            ),
-            child: Text(emoji, style: const TextStyle(fontSize: 26)),
+        // Плоский колір замість BackdropFilter: разом з полем токена й
+        // кнопкою QR на екрані одночасно було 3 блюри.
+        child: Container(
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: AppColors.white.withValues(alpha: 0.72),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.white.withValues(alpha: 0.7)),
           ),
+          child: Text(emoji, style: const TextStyle(fontSize: 26)),
         ),
       ),
     );
@@ -207,48 +204,46 @@ class _TokenField extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(18),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color: AppColors.white.withValues(alpha: 0.4),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: AppColors.subChipBorder),
-          ),
-          child: Row(
-            children: [
-              const Icon(
-                Icons.search,
-                size: 18,
-                color: AppColors.placeholderGray,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  style: const TextStyle(
+      // Плоский колір замість BackdropFilter — див. коментар у _IconBadge.
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.white.withValues(alpha: 0.62),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.subChipBorder),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.search,
+              size: 18,
+              color: AppColors.placeholderGray,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: TextField(
+                controller: controller,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textDark,
+                ),
+                decoration: const InputDecoration(
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  hintText: 'paste your token here…',
+                  hintStyle: TextStyle(
                     fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textDark,
-                  ),
-                  decoration: const InputDecoration(
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    hintText: 'paste your token here…',
-                    hintStyle: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.placeholderGray,
-                    ),
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.placeholderGray,
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -275,70 +270,65 @@ class _ScanQrRow extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(18),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-          child: Material(
-            color: AppColors.white.withValues(alpha: 0.4),
-            child: InkWell(
-              onTap: onTap,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
+        // Плоский колір замість BackdropFilter — див. коментар у _IconBadge.
+        child: Material(
+          color: AppColors.white.withValues(alpha: 0.6),
+          child: InkWell(
+            onTap: onTap,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: AppColors.white.withValues(alpha: 0.7),
                 ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: AppColors.white.withValues(alpha: 0.7),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: AppColors.accentBlueBg,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.qr_code_scanner_rounded,
-                        size: 20,
-                        color: AppColors.accentBlue,
-                      ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.accentBlueBg,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Scan QR from Mono app',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textDark,
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            'faster than copy-pasting',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.grayText,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Icon(
-                      Icons.chevron_right,
+                    child: const Icon(
+                      Icons.qr_code_scanner_rounded,
                       size: 20,
-                      color: AppColors.grayTextLight,
+                      color: AppColors.accentBlue,
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Scan QR from Mono app',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textDark,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'faster than copy-pasting',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.grayText,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.chevron_right,
+                    size: 20,
+                    color: AppColors.grayTextLight,
+                  ),
+                ],
               ),
             ),
           ),
