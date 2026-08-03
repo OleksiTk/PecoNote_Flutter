@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../shared/widgets/app_buttons.dart';
 import '../../../../shared/widgets/gradient_background.dart';
+import '../../../accounts/application/providers/accounts_providers.dart';
 import '../models/transaction_draft.dart';
 
-const String _accountLabel = 'Mono Black •4421';
-
-class NewTransactionScreen extends StatefulWidget {
+class NewTransactionScreen extends ConsumerStatefulWidget {
   const NewTransactionScreen({super.key});
 
   @override
-  State<NewTransactionScreen> createState() => _NewTransactionScreenState();
+  ConsumerState<NewTransactionScreen> createState() =>
+      _NewTransactionScreenState();
 }
 
-class _NewTransactionScreenState extends State<NewTransactionScreen> {
+class _NewTransactionScreenState extends ConsumerState<NewTransactionScreen> {
   TransactionKind _kind = TransactionKind.expense;
   String _whole = '0';
   String? _decimal;
@@ -62,13 +63,16 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
   }
 
   void _next() {
+    final accounts = ref.read(accountsProvider).value ?? const [];
+    final account = accounts.isEmpty ? null : accounts.first;
     context.pushNamed(
       AppRoute.transactionDetails.name,
       extra: TransactionDraft(
         kind: _kind,
         wholeAmount: _whole,
         decimalAmount: (_decimal ?? '').padRight(2, '0'),
-        accountLabel: _accountLabel,
+        accountLabel: account?.name ?? 'No account yet',
+        accountId: account?.id,
       ),
     );
   }
@@ -86,6 +90,8 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
   @override
   Widget build(BuildContext context) {
     final decimalDisplay = (_decimal ?? '').padRight(2, '0');
+    final accounts = ref.watch(accountsProvider).value ?? const [];
+    final accountLabel = accounts.isEmpty ? 'No account yet' : accounts.first.name;
 
     return GradientBackground(
       child: SafeArea(
@@ -200,9 +206,9 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
                     color: AppColors.white.withValues(alpha: 0.9),
                   ),
                 ),
-                child: const Text(
-                  'UAH · $_accountLabel',
-                  style: TextStyle(
+                child: Text(
+                  'UAH · $accountLabel',
+                  style: const TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
                     color: AppColors.grayText,
@@ -222,7 +228,7 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
                 child: PillButton(
                   label: 'Next · details',
-                  onPressed: _hasAmount ? _next : null,
+                  onPressed: _hasAmount && accounts.isNotEmpty ? _next : null,
                   backgroundColor: AppColors.accentBlueMuted,
                   foregroundColor: AppColors.white,
                   borderColor: AppColors.accentBlueMuted,

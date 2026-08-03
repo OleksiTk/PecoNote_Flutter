@@ -204,7 +204,7 @@ class _PasswordHints extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
         children: [
-          _PasswordHint(label: '8+ characters', fulfilled: hasLength),
+          _PasswordHint(label: '7+ characters', fulfilled: hasLength),
           const SizedBox(width: 8),
           _PasswordHint(label: 'contains a number', fulfilled: hasNumber),
         ],

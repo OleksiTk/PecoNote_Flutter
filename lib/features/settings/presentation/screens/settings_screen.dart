@@ -1,16 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../shared/widgets/app_bottom_nav_bar.dart';
 import '../../../../shared/widgets/gradient_background.dart';
+import '../../application/providers/settings_providers.dart';
+import '../../domain/entities/currency.dart';
+import '../../domain/entities/user_profile.dart';
 
-/// Екран налаштувань PecoNote: профіль, статистика, групи параметрів
-/// і небезпечні дії. Поки що статичний макет на mock-даних.
-class SettingsScreen extends StatelessWidget {
+/// Екран налаштувань PecoNote: профіль і валюта підтягуються з
+/// GET /profile/ та GET /currencies/, решта поки що mock-дані макета.
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profileAsync = ref.watch(userProfileProvider);
+    final currenciesAsync = ref.watch(userCurrenciesProvider);
+
     return GradientBackground(
       child: Stack(
         children: [
@@ -18,17 +25,17 @@ class SettingsScreen extends StatelessWidget {
             bottom: false,
             child: ListView(
               padding: const EdgeInsets.fromLTRB(22, 16, 22, 120),
-              children: const [
-                _ProfileRow(),
-                SizedBox(height: 20),
-                _StatsRow(),
-                SizedBox(height: 26),
+              children: [
+                _ProfileRow(profileAsync: profileAsync),
+                const SizedBox(height: 20),
+                const _StatsRow(),
+                const SizedBox(height: 26),
 
-                _SectionLabel('PREFERENCES'),
-                SizedBox(height: 8),
+                const _SectionLabel('PREFERENCES'),
+                const SizedBox(height: 8),
                 _GlassSection(
                   rows: [
-                    _SettingsRowData(
+                    const _SettingsRowData(
                       emoji: '🌐',
                       label: 'Language',
                       value: 'English',
@@ -36,25 +43,25 @@ class SettingsScreen extends StatelessWidget {
                     _SettingsRowData(
                       emoji: '💱',
                       label: 'Default currency',
-                      value: 'UAH ₴',
+                      value: _currencyLabel(currenciesAsync),
                     ),
-                    _SettingsRowData(
+                    const _SettingsRowData(
                       emoji: '🎨',
                       label: 'Theme',
                       value: 'Light',
                     ),
-                    _SettingsRowData(
+                    const _SettingsRowData(
                       emoji: '🔔',
                       label: 'Notifications',
                       trailing: _NotificationsSwitch(),
                     ),
                   ],
                 ),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-                _SectionLabel('DATA & MEMORY'),
-                SizedBox(height: 8),
-                _GlassSection(
+                const _SectionLabel('DATA & MEMORY'),
+                const SizedBox(height: 8),
+                const _GlassSection(
                   rows: [
                     _SettingsRowData(emoji: '🧹', label: 'Clear card history'),
                     _SettingsRowData(
@@ -64,9 +71,9 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                SizedBox(height: 22),
+                const SizedBox(height: 22),
 
-                _DangerSection(),
+                const _DangerSection(),
               ],
             ),
           ),
@@ -84,14 +91,42 @@ class SettingsScreen extends StatelessWidget {
       ),
     );
   }
+
+  static String _currencyLabel(AsyncValue<List<Currency>> currenciesAsync) {
+    return currenciesAsync.when(
+      data: (currencies) => currencies.isEmpty
+          ? 'Not set'
+          : '${currencies.first.code} ${currencies.first.symbol}',
+      loading: () => '…',
+      error: (_, _) => '—',
+    );
+  }
 }
 
 /// Аватар + ім'я та email. Без картки — просто на градієнті.
 class _ProfileRow extends StatelessWidget {
-  const _ProfileRow();
+  const _ProfileRow({required this.profileAsync});
+
+  final AsyncValue<UserProfile> profileAsync;
 
   @override
   Widget build(BuildContext context) {
+    final initial = profileAsync.when(
+      data: (profile) => profile.initial,
+      loading: () => '…',
+      error: (_, _) => '?',
+    );
+    final name = profileAsync.when(
+      data: (profile) => profile.username,
+      loading: () => 'Loading…',
+      error: (_, _) => 'Your account',
+    );
+    final email = profileAsync.when(
+      data: (profile) => profile.email,
+      loading: () => '',
+      error: (_, _) => 'Could not load profile',
+    );
+
     return Row(
       children: [
         Container(
@@ -103,9 +138,9 @@ class _ProfileRow extends StatelessWidget {
             shape: BoxShape.circle,
             border: Border.all(color: AppColors.white.withValues(alpha: 0.9)),
           ),
-          child: const Text(
-            'D',
-            style: TextStyle(
+          child: Text(
+            initial,
+            style: const TextStyle(
               fontSize: 26,
               fontWeight: FontWeight.w700,
               color: AppColors.accentBlue,
@@ -113,22 +148,22 @@ class _ProfileRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 16),
-        const Expanded(
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Daryna Kovalenko',
-                style: TextStyle(
+                name,
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textDark,
                 ),
               ),
-              SizedBox(height: 3),
+              const SizedBox(height: 3),
               Text(
-                'daryna.k@gmail.com',
-                style: TextStyle(fontSize: 13, color: AppColors.grayText),
+                email,
+                style: const TextStyle(fontSize: 13, color: AppColors.grayText),
               ),
             ],
           ),

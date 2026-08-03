@@ -4,12 +4,14 @@ class Account {
   const Account({
     required this.id,
     required this.name,
+    required this.currencyId,
     required this.sync,
-    this.bankName,
+    this.description,
   });
 
   final String id;
   final String name;
-  final String? bankName;
+  final String? description;
+  final int currencyId;
   final SyncMetadata sync;
 }

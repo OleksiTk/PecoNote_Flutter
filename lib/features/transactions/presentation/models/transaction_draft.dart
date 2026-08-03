@@ -25,12 +25,17 @@ class TransactionDraft {
     required this.wholeAmount,
     required this.decimalAmount,
     required this.accountLabel,
+    this.accountId,
   });
 
   final TransactionKind kind;
   final String wholeAmount;
   final String decimalAmount;
   final String accountLabel;
+
+  /// Null, коли на кроці 1 ще немає жодного реального рахунку (створеного
+  /// через /accounts/) — тоді крок 2 не може зберегти транзакцію.
+  final String? accountId;
 
   double get amount => double.tryParse('$wholeAmount.$decimalAmount') ?? 0;
 }

@@ -1,11 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../app/theme/app_colors.dart';
+import '../../../../core/errors/app_failure.dart';
 import '../../../../shared/widgets/app_buttons.dart';
 import '../../../../shared/widgets/gradient_background.dart';
+import '../../../settings/application/providers/settings_providers.dart';
+import '../../application/providers/transactions_providers.dart';
+import '../../domain/entities/transaction.dart' show TransactionType;
 import '../models/transaction_draft.dart';
 
 class _Category {
@@ -54,22 +61,25 @@ const _savingsJar = _TransferAccount(
   balance: 1000,
 );
 
-class TransactionDetailsScreen extends StatefulWidget {
+class TransactionDetailsScreen extends ConsumerStatefulWidget {
   const TransactionDetailsScreen({super.key, required this.draft});
 
   final TransactionDraft draft;
 
   @override
-  State<TransactionDetailsScreen> createState() =>
+  ConsumerState<TransactionDetailsScreen> createState() =>
       _TransactionDetailsScreenState();
 }
 
-class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
+class _TransactionDetailsScreenState
+    extends ConsumerState<TransactionDetailsScreen> {
   int _categoryIndex = 0;
   DateTime _date = DateTime.now();
   String? _note;
   bool _repeatsMonthly = false;
   bool _accountsSwapped = false;
+  bool _saving = false;
+  String? _error;
 
   _TransferAccount get _fromAccount =>
       _accountsSwapped ? _savingsJar : _monoBlack;
@@ -121,10 +131,45 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
     if (result != null) setState(() => _note = result.isEmpty ? null : result);
   }
 
-  void _save() {
-    // Немає ще бекенду для транзакцій — повертаємось на Home, як і решта
-    // незавершених флоу в застосунку.
-    context.goNamed(AppRoute.home.name);
+  Future<void> _save() async {
+    final draft = widget.draft;
+    // Перекази поки не зберігаються: тут потрібен другий реальний рахунок,
+    // а UI для "From/To" ще працює на статичних тестових акаунтах.
+    if (draft.kind == TransactionKind.transfer || draft.accountId == null) {
+      context.goNamed(AppRoute.home.name);
+      return;
+    }
+
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      final currencies = await ref.read(userCurrenciesProvider.future);
+      if (currencies.isEmpty) {
+        throw const NetworkFailure(
+          'Set a default currency in Settings before saving.',
+        );
+      }
+      await ref
+          .read(transactionsProvider.notifier)
+          .create(
+            type: draft.kind == TransactionKind.income
+                ? TransactionType.income
+                : TransactionType.expense,
+            accountId: draft.accountId!,
+            amount: draft.amount,
+            currencyId: currencies.first.id,
+            counterpartyName: _note ?? '',
+            occurredAt: _date,
+            description: _note,
+          );
+      if (mounted) context.goNamed(AppRoute.home.name);
+    } on AppFailure catch (failure) {
+      if (mounted) setState(() => _error = failure.message);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   String get _dateLabel {
@@ -426,12 +471,25 @@ class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
                   ),
                 ),
               ],
-              const SizedBox(height: 40),
+              const SizedBox(height: 24),
+              if (_error != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                  child: Text(
+                    _error!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: AppColors.error,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
                 child: PillButton(
-                  label: draft.kind.saveLabel,
-                  onPressed: _save,
+                  label: _saving ? 'Saving…' : draft.kind.saveLabel,
+                  onPressed: _saving ? null : () => unawaited(_save()),
                   backgroundColor: AppColors.accentBlueMuted,
                   foregroundColor: AppColors.white,
                   borderColor: AppColors.accentBlueMuted,

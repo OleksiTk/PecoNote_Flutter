@@ -1,9 +1,18 @@
 import '../entities/transaction.dart';
 
 abstract interface class TransactionsRepository {
-  Stream<List<Transaction>> watchRecentTransactions();
+  Future<List<Transaction>> getTransactions();
 
-  Future<Transaction> createOffline(Transaction transaction);
+  Future<Transaction> create({
+    required TransactionType type,
+    required String accountId,
+    required double amount,
+    required int currencyId,
+    required String counterpartyName,
+    required DateTime occurredAt,
+    String? destinationAccountId,
+    String? description,
+  });
 
-  Future<void> markSynced({required String localId, required String serverId});
+  Future<void> trash(String id);
 }

@@ -1,25 +1,33 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../app/theme/app_colors.dart';
+import '../../../../core/errors/app_failure.dart';
 import '../../../../shared/widgets/app_buttons.dart';
 import '../../../../shared/widgets/gradient_background.dart';
 import '../../../../shared/widgets/labeled_field.dart';
+import '../../../settings/application/providers/settings_providers.dart';
+import '../../application/providers/accounts_providers.dart';
 
 const int _nameMaxLength = 24;
 
-class NewAccountScreen extends StatefulWidget {
+class NewAccountScreen extends ConsumerStatefulWidget {
   const NewAccountScreen({super.key});
 
   @override
-  State<NewAccountScreen> createState() => _NewAccountScreenState();
+  ConsumerState<NewAccountScreen> createState() => _NewAccountScreenState();
 }
 
-class _NewAccountScreenState extends State<NewAccountScreen> {
+class _NewAccountScreenState extends ConsumerState<NewAccountScreen> {
   final _name = TextEditingController();
   final _description = TextEditingController();
   final _balance = TextEditingController();
+  bool _submitting = false;
+  String? _error;
 
   @override
   void initState() {
@@ -46,10 +54,35 @@ class _NewAccountScreenState extends State<NewAccountScreen> {
     }
   }
 
-  void _addAccount() {
-    // Немає ще бекенду для рахунків — повертаємось на Home, як і решта
-    // онбординг-флоу (Monobank, "Add manually").
-    context.goNamed(AppRoute.home.name);
+  Future<void> _addAccount() async {
+    final name = _name.text.trim();
+    if (name.isEmpty || _submitting) return;
+
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    try {
+      final currencies = await ref.read(userCurrenciesProvider.future);
+      if (currencies.isEmpty) {
+        throw const NetworkFailure(
+          'Set a default currency in Settings before adding an account.',
+        );
+      }
+      final description = _description.text.trim();
+      await ref
+          .read(accountsProvider.notifier)
+          .create(
+            name: name,
+            description: description.isEmpty ? null : description,
+            currencyId: currencies.first.id,
+          );
+      if (mounted) context.goNamed(AppRoute.home.name);
+    } on AppFailure catch (failure) {
+      if (mounted) setState(() => _error = failure.message);
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   @override
@@ -227,9 +260,22 @@ class _NewAccountScreenState extends State<NewAccountScreen> {
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
               child: Column(
                 children: [
+                  if (_error != null) ...[
+                    Text(
+                      _error!,
+                      style: const TextStyle(
+                        color: AppColors.error,
+                        fontSize: 13,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   PillButton(
-                    label: 'Add account',
-                    onPressed: _addAccount,
+                    label: _submitting ? 'Adding…' : 'Add account',
+                    onPressed: _submitting || _name.text.trim().isEmpty
+                        ? null
+                        : () => unawaited(_addAccount()),
                     backgroundColor: AppColors.accentBlueMuted,
                     foregroundColor: AppColors.white,
                     borderColor: AppColors.accentBlueMuted,

@@ -1,13 +1,22 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../app/theme/app_colors.dart';
+import '../../../../core/errors/app_failure.dart';
 import '../../../../shared/widgets/app_bottom_nav_bar.dart';
 import '../../../../shared/widgets/gradient_background.dart';
 import '../../../../shared/widgets/labeled_field.dart';
+import '../../../accounts/application/providers/accounts_providers.dart';
+import '../../../accounts/domain/entities/account.dart';
+import '../../../transactions/application/providers/transactions_providers.dart';
+import '../../../transactions/domain/entities/transaction.dart';
+import '../../../transactions/presentation/models/transaction_draft.dart'
+    show formatCurrencyAmount;
 
 /// Єдиний горизонтальний відступ екрана: 390 − 22×2 = 346 (ширина картки з макета).
 const double _hPad = 15;
@@ -15,24 +24,25 @@ const double _hPad = 15;
 /// Висота картки в каруселі (з макета).
 const double _cardHeight = 186;
 
-/// Домашній екран PecoNote: баланс по всіх рахунках і останні транзакції.
-/// Поки що статичний макет на mock-даних.
-class HomeScreen extends StatefulWidget {
+/// Домашній екран PecoNote: карусель рахунків підтягується з GET /accounts/,
+/// а стрічка "Recent transactions" — з GET /transactions/. Створення й
+/// видалення обох йдуть через ту саму API.
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key, this.startOnAddAccount = false});
 
-  /// Відкрити карусель одразу на картці "Add an account" — коли сюди
-  /// прийшли з "Add manually" на екрані вибору старту.
+  /// Відкрити карусель одразу на картці "Add an account". Насправді це вже
+  /// поведінка за замовчуванням для щойно зареєстрованого користувача — у
+  /// нього просто ще немає жодного рахунку, тож картка "Add an account"
+  /// і так стоїть першою (index 0).
   final bool startOnAddAccount;
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen>
+class _HomeScreenState extends ConsumerState<HomeScreen>
     with SingleTickerProviderStateMixin {
-  late int _accountsPage = widget.startOnAddAccount
-      ? _AccountsCarousel.addAccountPageIndex
-      : 0;
+  int _accountsPage = 0;
   bool _cardFlipped = false;
   late final AnimationController _flipController = AnimationController(
     vsync: this,
@@ -45,13 +55,13 @@ class _HomeScreenState extends State<HomeScreen>
     super.dispose();
   }
 
-  void _onAccountsPageChanged(int page) {
-    if (page != 0 && _cardFlipped) {
+  void _onAccountsPageChanged(int page, int addAccountIndex) {
+    if (page != addAccountIndex && _cardFlipped) {
       _flipController.reverse();
     }
     setState(() {
       _accountsPage = page;
-      if (page != 0) _cardFlipped = false;
+      if (page != addAccountIndex) _cardFlipped = false;
     });
   }
 
@@ -65,8 +75,25 @@ class _HomeScreenState extends State<HomeScreen>
     setState(() => _cardFlipped = flipped);
   }
 
+  Future<void> _deleteAccount(Account account) async {
+    await ref.read(accountsProvider.notifier).delete(account.id);
+    if (mounted) _toggleCardFlip();
+  }
+
+  Future<void> _deleteTransaction(Transaction transaction) {
+    return ref.read(transactionsProvider.notifier).trash(transaction.id);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final accountsAsync = ref.watch(accountsProvider);
+    final accounts = accountsAsync.value ?? const <Account>[];
+    final isLoaded = accountsAsync.hasValue;
+    final addAccountIndex = isLoaded ? accounts.length : 0;
+    final pageCount = isLoaded ? accounts.length + 1 : 1;
+    final showEditSheet = _cardFlipped && _accountsPage < accounts.length;
+    final transactionsAsync = ref.watch(transactionsProvider);
+
     return GradientBackground(
       child: Stack(
         children: [
@@ -79,8 +106,18 @@ class _HomeScreenState extends State<HomeScreen>
                   child: _HomeHeader(),
                 ),
                 _AccountsCarousel(
-                  initialPage: _accountsPage,
-                  onPageChanged: _onAccountsPageChanged,
+                  // Новий ключ на кожну зміну кількості сторінок — це
+                  // перестворює PageController з правильним initialPage,
+                  // коли список рахунків щойно завантажився.
+                  key: ValueKey('accounts-$pageCount'),
+                  accounts: accounts,
+                  pageCount: pageCount,
+                  addAccountIndex: addAccountIndex,
+                  isLoading: accountsAsync.isLoading && !accountsAsync.hasValue,
+                  hasError: accountsAsync.hasError,
+                  onRetry: () => ref.invalidate(accountsProvider),
+                  onPageChanged: (page) =>
+                      _onAccountsPageChanged(page, addAccountIndex),
                   flipController: _flipController,
                   onCardTap: _toggleCardFlip,
                 ),
@@ -88,12 +125,18 @@ class _HomeScreenState extends State<HomeScreen>
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: _hPad),
-                    child: _cardFlipped
-                        ? _EditCardSheet(onDone: _toggleCardFlip)
+                    child: showEditSheet
+                        ? _EditCardSheet(
+                            account: accounts[_accountsPage],
+                            onDone: _toggleCardFlip,
+                            onDelete: () =>
+                                _deleteAccount(accounts[_accountsPage]),
+                          )
                         : _TransactionsSheet(
-                            isEmpty:
-                                _accountsPage ==
-                                _AccountsCarousel.addAccountPageIndex,
+                            hasAccounts: _accountsPage < accounts.length,
+                            transactionsAsync: transactionsAsync,
+                            onRetry: () => ref.invalidate(transactionsProvider),
+                            onDelete: _deleteTransaction,
                           ),
                   ),
                 ),
@@ -176,30 +219,35 @@ class _HomeHeader extends StatelessWidget {
 
 class _AccountsCarousel extends StatefulWidget {
   const _AccountsCarousel({
+    super.key,
+    required this.accounts,
+    required this.pageCount,
+    required this.addAccountIndex,
+    required this.isLoading,
+    required this.hasError,
+    required this.onRetry,
     required this.onPageChanged,
     required this.flipController,
     required this.onCardTap,
-    this.initialPage = 0,
   });
 
+  final List<Account> accounts;
+  final int pageCount;
+  final int addAccountIndex;
+  final bool isLoading;
+  final bool hasError;
+  final VoidCallback onRetry;
   final ValueChanged<int> onPageChanged;
   final AnimationController flipController;
   final VoidCallback onCardTap;
-  final int initialPage;
-
-  /// Тільки 2 картки: рахунок і "Add an account" — вона завжди останньою.
-  static const pageCount = 2;
-  static const addAccountPageIndex = pageCount - 1;
 
   @override
   State<_AccountsCarousel> createState() => _AccountsCarouselState();
 }
 
 class _AccountsCarouselState extends State<_AccountsCarousel> {
-  late final PageController _controller = PageController(
-    initialPage: widget.initialPage,
-  );
-  late int _page = widget.initialPage;
+  late final PageController _controller = PageController();
+  int _page = 0;
 
   @override
   void dispose() {
@@ -216,35 +264,117 @@ class _AccountsCarouselState extends State<_AccountsCarousel> {
           height: _cardHeight,
           child: PageView.builder(
             controller: _controller,
-            itemCount: _AccountsCarousel.pageCount,
+            itemCount: widget.pageCount,
             onPageChanged: (i) {
               setState(() => _page = i);
               widget.onPageChanged(i);
             },
-            itemBuilder: (context, index) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: _hPad),
-              // Тільки перша картка (реальний рахунок) вміє перевертатись на
-              // "Card settings" — "Add an account" завжди веде на форму
-              // створення нового рахунку напряму.
-              child: index == 0
-                  ? _FlippableAccountCard(
-                      controller: widget.flipController,
-                      onTap: widget.onCardTap,
-                    )
-                  : const _AddAccountCard(),
-            ),
+            itemBuilder: (context, index) {
+              late final Widget child;
+              if (widget.hasError) {
+                child = _AccountsErrorCard(onRetry: widget.onRetry);
+              } else if (widget.isLoading) {
+                child = const _AccountsLoadingCard();
+              } else if (index == widget.addAccountIndex) {
+                child = const _AddAccountCard();
+              } else {
+                child = _FlippableAccountCard(
+                  account: widget.accounts[index],
+                  totalLinked: widget.accounts.length,
+                  controller: widget.flipController,
+                  onTap: widget.onCardTap,
+                );
+              }
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: _hPad),
+                child: child,
+              );
+            },
           ),
         ),
         const SizedBox(height: 12),
-        _CarouselDots(activeIndex: _page, count: _AccountsCarousel.pageCount),
+        _CarouselDots(activeIndex: _page, count: widget.pageCount),
       ],
     );
   }
 }
 
-class _FlippableAccountCard extends StatelessWidget {
-  const _FlippableAccountCard({required this.controller, required this.onTap});
+class _AccountsLoadingCard extends StatelessWidget {
+  const _AccountsLoadingCard();
 
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: _cardHeight,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: AppColors.white.withValues(alpha: 0.85)),
+        color: AppColors.white.withValues(alpha: 0.5),
+      ),
+      child: const CircularProgressIndicator(
+        strokeWidth: 2.4,
+        color: AppColors.accentBlue,
+      ),
+    );
+  }
+}
+
+class _AccountsErrorCard extends StatelessWidget {
+  const _AccountsErrorCard({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: _cardHeight,
+      alignment: Alignment.center,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: AppColors.white.withValues(alpha: 0.85)),
+        color: AppColors.white.withValues(alpha: 0.5),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'Could not load your accounts.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13.5, color: AppColors.grayText),
+          ),
+          const SizedBox(height: 10),
+          GestureDetector(
+            onTap: onRetry,
+            behavior: HitTestBehavior.opaque,
+            child: const Text(
+              'Retry',
+              style: TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w700,
+                color: AppColors.accentBlue,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FlippableAccountCard extends StatelessWidget {
+  const _FlippableAccountCard({
+    required this.account,
+    required this.totalLinked,
+    required this.controller,
+    required this.onTap,
+  });
+
+  final Account account;
+  final int totalLinked;
   final AnimationController controller;
   final VoidCallback onTap;
 
@@ -266,9 +396,9 @@ class _FlippableAccountCard extends StatelessWidget {
                 ? Transform(
                     alignment: Alignment.center,
                     transform: Matrix4.identity()..rotateY(math.pi),
-                    child: const _CardSettingsFace(),
+                    child: _CardSettingsFace(account: account),
                   )
-                : const _BalanceCard(),
+                : _BalanceCard(account: account, totalLinked: totalLinked),
           );
         },
       ),
@@ -277,7 +407,10 @@ class _FlippableAccountCard extends StatelessWidget {
 }
 
 class _BalanceCard extends StatelessWidget {
-  const _BalanceCard();
+  const _BalanceCard({required this.account, required this.totalLinked});
+
+  final Account account;
+  final int totalLinked;
 
   @override
   Widget build(BuildContext context) {
@@ -310,15 +443,18 @@ class _BalanceCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Text(
-                'All accounts',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textDark,
+              Expanded(
+                child: Text(
+                  account.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textDark,
+                  ),
                 ),
               ),
-              const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
@@ -331,9 +467,9 @@ class _BalanceCard extends StatelessWidget {
                     color: AppColors.white.withValues(alpha: 0.9),
                   ),
                 ),
-                child: const Text(
-                  '3 linked',
-                  style: TextStyle(
+                child: Text(
+                  '$totalLinked linked',
+                  style: const TextStyle(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textDark,
@@ -343,11 +479,13 @@ class _BalanceCard extends StatelessWidget {
             ],
           ),
           const Spacer(),
+          // Бекенд поки не має ендпоінта балансу по рахунку (лише зведений
+          // /balances/ звіт) — показуємо чесний нуль, а не вигадане число.
           RichText(
             text: const TextSpan(
               children: [
                 TextSpan(
-                  text: '₴ 27 970',
+                  text: '₴ 0',
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w800,
@@ -356,7 +494,7 @@ class _BalanceCard extends StatelessWidget {
                   ),
                 ),
                 TextSpan(
-                  text: '.70',
+                  text: '.00',
                   style: TextStyle(
                     fontSize: 19,
                     fontWeight: FontWeight.w700,
@@ -381,7 +519,9 @@ class _BalanceCard extends StatelessWidget {
 /// Задня грань картки рахунку — показує "Card settings" замість балансу,
 /// поки картка перевернута (див. [_FlippableAccountCard]).
 class _CardSettingsFace extends StatelessWidget {
-  const _CardSettingsFace();
+  const _CardSettingsFace({required this.account});
+
+  final Account account;
 
   @override
   Widget build(BuildContext context) {
@@ -409,19 +549,23 @@ class _CardSettingsFace extends StatelessWidget {
           ),
         ],
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Mono Black  •4421',
-            style: TextStyle(
+            account.description?.isNotEmpty == true
+                ? account.description!
+                : account.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: AppColors.grayText,
             ),
           ),
-          Spacer(),
-          Text(
+          const Spacer(),
+          const Text(
             'Card settings',
             style: TextStyle(
               fontSize: 24,
@@ -597,42 +741,19 @@ class _AddButton extends StatelessWidget {
 }
 
 class _TransactionsSheet extends StatelessWidget {
-  const _TransactionsSheet({required this.isEmpty});
+  const _TransactionsSheet({
+    required this.hasAccounts,
+    required this.transactionsAsync,
+    required this.onRetry,
+    required this.onDelete,
+  });
 
   /// Показує заглушку "Once you create a card…" замість списку транзакцій,
-  /// коли в каруселі вибрана картка "Add an account".
-  final bool isEmpty;
-
-  static const List<_TransactionData> _transactions = [
-    _TransactionData(
-      emoji: '🛒',
-      title: 'Silpo',
-      subtitle: 'Groceries · 18:24',
-      amount: '−₴ 642.18',
-      isIncome: false,
-    ),
-    _TransactionData(
-      emoji: '💼',
-      title: 'Salary',
-      subtitle: 'Income · 09:00',
-      amount: '+₴ 46 000',
-      isIncome: true,
-    ),
-    _TransactionData(
-      emoji: '🚕',
-      title: 'Uklon',
-      subtitle: 'Transport · Yesterday',
-      amount: '−₴ 185.00',
-      isIncome: false,
-    ),
-    _TransactionData(
-      emoji: '☕️',
-      title: 'Blur Coffee',
-      subtitle: 'Cafés · Yesterday',
-      amount: '−₴ 238.50',
-      isIncome: false,
-    ),
-  ];
+  /// коли в каруселі вибрана картка "Add an account" (або рахунків ще нема).
+  final bool hasAccounts;
+  final AsyncValue<List<Transaction>> transactionsAsync;
+  final VoidCallback onRetry;
+  final Future<void> Function(Transaction transaction) onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -653,7 +774,7 @@ class _TransactionsSheet extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                if (!isEmpty)
+                if (hasAccounts)
                   const Text(
                     'See all',
                     style: TextStyle(
@@ -665,7 +786,7 @@ class _TransactionsSheet extends StatelessWidget {
               ],
             ),
           ),
-          if (isEmpty)
+          if (!hasAccounts)
             const Expanded(
               child: Padding(
                 padding: EdgeInsets.fromLTRB(32, 0, 32, 110),
@@ -679,25 +800,104 @@ class _TransactionsSheet extends StatelessWidget {
                 ),
               ),
             )
-          else ...[
-            const Padding(
-              padding: EdgeInsets.fromLTRB(18, 0, 18, 6),
-              child: _SearchField(),
-            ),
+          else
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.fromLTRB(18, 6, 18, 110),
-                itemCount: _transactions.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 2),
-                itemBuilder: (context, index) =>
-                    _TransactionTile(data: _transactions[index]),
+              child: transactionsAsync.when(
+                data: (transactions) => transactions.isEmpty
+                    ? const Padding(
+                        padding: EdgeInsets.fromLTRB(32, 0, 32, 110),
+                        child: Center(
+                          child: Text(
+                            'No transactions yet. Tap the + button to add one.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              color: AppColors.grayText,
+                            ),
+                          ),
+                        ),
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.fromLTRB(18, 0, 18, 6),
+                            child: _SearchField(),
+                          ),
+                          Expanded(
+                            child: ListView.separated(
+                              padding: const EdgeInsets.fromLTRB(
+                                18,
+                                6,
+                                18,
+                                110,
+                              ),
+                              itemCount: transactions.length,
+                              separatorBuilder: (_, _) =>
+                                  const SizedBox(height: 2),
+                              itemBuilder: (context, index) => _TransactionTile(
+                                data: transactions[index],
+                                onDelete: () => onDelete(transactions[index]),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                loading: () => const Center(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.4,
+                    color: AppColors.accentBlue,
+                  ),
+                ),
+                error: (_, _) => Padding(
+                  padding: const EdgeInsets.fromLTRB(32, 0, 32, 110),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'Could not load your transactions.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            color: AppColors.grayText,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        GestureDetector(
+                          onTap: onRetry,
+                          behavior: HitTestBehavior.opaque,
+                          child: const Text(
+                            'Retry',
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.accentBlue,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
-          ],
         ],
       ),
     );
   }
+}
+
+String _formatTransactionTime(DateTime occurredAt) {
+  final local = occurredAt.toLocal();
+  final now = DateTime.now();
+  final yesterday = now.subtract(const Duration(days: 1));
+  final time = DateFormat('HH:mm').format(local);
+  bool isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+  if (isSameDay(local, now)) return 'Today · $time';
+  if (isSameDay(local, yesterday)) return 'Yesterday · $time';
+  return '${DateFormat('d MMM').format(local)} · $time';
 }
 
 class _GlassSheet extends StatelessWidget {
@@ -735,21 +935,28 @@ class _GlassSheet extends StatelessWidget {
 }
 
 class _EditCardSheet extends StatefulWidget {
-  const _EditCardSheet({required this.onDone});
+  const _EditCardSheet({
+    required this.account,
+    required this.onDone,
+    required this.onDelete,
+  });
 
+  final Account account;
   final VoidCallback onDone;
+  final Future<void> Function() onDelete;
 
   @override
   State<_EditCardSheet> createState() => _EditCardSheetState();
 }
 
 class _EditCardSheetState extends State<_EditCardSheet> {
-  final _name = TextEditingController(text: 'Mono Black');
-  final _description = TextEditingController(
-    text: 'Everyday spending, salary lands here',
+  late final _name = TextEditingController(text: widget.account.name);
+  late final _description = TextEditingController(
+    text: widget.account.description ?? '',
   );
-  final _balance = TextEditingController(text: '24 850.70');
   int _designIndex = 0;
+  bool _deleting = false;
+  String? _deleteError;
 
   static const _designColors = [
     Color(0xFF262B3D),
@@ -763,7 +970,6 @@ class _EditCardSheetState extends State<_EditCardSheet> {
   void dispose() {
     _name.dispose();
     _description.dispose();
-    _balance.dispose();
     super.dispose();
   }
 
@@ -790,7 +996,19 @@ class _EditCardSheetState extends State<_EditCardSheet> {
         ],
       ),
     );
-    if (confirmed == true && mounted) widget.onDone();
+    if (confirmed != true || !mounted) return;
+
+    setState(() {
+      _deleting = true;
+      _deleteError = null;
+    });
+    try {
+      await widget.onDelete();
+    } on AppFailure catch (failure) {
+      if (mounted) setState(() => _deleteError = failure.message);
+    } finally {
+      if (mounted) setState(() => _deleting = false);
+    }
   }
 
   @override
@@ -862,62 +1080,6 @@ class _EditCardSheetState extends State<_EditCardSheet> {
             ),
             const SizedBox(height: 14),
             LabeledField(
-              label: 'BALANCE',
-              child: Row(
-                children: [
-                  const Text(
-                    '₴',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.grayText,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextField(
-                      controller: _balance,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textDark,
-                      ),
-                      decoration: const InputDecoration(
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.white.withValues(alpha: 0.85),
-                      borderRadius: BorderRadius.circular(99),
-                      border: Border.all(
-                        color: AppColors.white.withValues(alpha: 0.9),
-                      ),
-                    ),
-                    child: const Text(
-                      'UAH',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.accentBlue,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 14),
-            LabeledField(
               label: 'DESIGN',
               child: Row(
                 children: [
@@ -985,15 +1147,24 @@ class _EditCardSheetState extends State<_EditCardSheet> {
               ),
             ),
             const SizedBox(height: 18),
+            if (_deleteError != null) ...[
+              Text(
+                _deleteError!,
+                style: const TextStyle(color: AppColors.error, fontSize: 13),
+              ),
+              const SizedBox(height: 8),
+            ],
             GestureDetector(
-              onTap: _confirmDelete,
+              onTap: _deleting ? null : _confirmDelete,
               behavior: HitTestBehavior.opaque,
-              child: const Text(
-                'Delete card',
+              child: Text(
+                _deleting ? 'Deleting…' : 'Delete card',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.error,
+                  color: _deleting
+                      ? AppColors.error.withValues(alpha: 0.5)
+                      : AppColors.error,
                 ),
               ),
             ),
@@ -1043,77 +1214,128 @@ class _SearchField extends StatelessWidget {
   }
 }
 
-class _TransactionData {
-  const _TransactionData({
-    required this.emoji,
-    required this.title,
-    required this.subtitle,
-    required this.amount,
-    required this.isIncome,
-  });
-
-  final String emoji;
-  final String title;
-  final String subtitle;
-  final String amount;
-  final bool isIncome;
-}
-
 class _TransactionTile extends StatelessWidget {
-  const _TransactionTile({required this.data});
+  const _TransactionTile({required this.data, required this.onDelete});
 
-  final _TransactionData data;
+  final Transaction data;
+  final Future<void> Function() onDelete;
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 9),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: AppColors.white.withValues(alpha: 0.8),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.white.withValues(alpha: 0.9)),
-            ),
-            child: Text(data.emoji, style: const TextStyle(fontSize: 20)),
+  static const _emojiByType = {
+    TransactionType.income: '💼',
+    TransactionType.expense: '🧾',
+    TransactionType.transfer: '🔁',
+  };
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete this transaction?'),
+        content: const Text(
+          'It will be moved to trash and removed from your totals.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  data.title,
-                  style: const TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textDark,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  data.subtitle,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.grayText,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            data.amount,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: data.isIncome ? AppColors.income : AppColors.textDark,
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: AppColors.error),
             ),
           ),
         ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await onDelete();
+    } on AppFailure catch (failure) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(failure.message)));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isIncome = data.type == TransactionType.income;
+    final title = data.description?.isNotEmpty == true
+        ? data.description!
+        : switch (data.type) {
+            TransactionType.income => 'Income',
+            TransactionType.expense => 'Expense',
+            TransactionType.transfer => 'Transfer',
+          };
+    final sign = switch (data.type) {
+      TransactionType.expense => '−',
+      TransactionType.income => '+',
+      TransactionType.transfer => '',
+    };
+
+    return GestureDetector(
+      onLongPress: () => _confirmDelete(context),
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 9),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: AppColors.white.withValues(alpha: 0.8),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: AppColors.white.withValues(alpha: 0.9),
+                ),
+              ),
+              child: Text(
+                _emojiByType[data.type] ?? '🧾',
+                style: const TextStyle(fontSize: 20),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _formatTransactionTime(data.occurredAt),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.grayText,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              '$sign₴ ${formatCurrencyAmount(data.total)}',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: isIncome ? AppColors.income : AppColors.textDark,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
