@@ -17,6 +17,10 @@ enum AppRoute {
   monobankRulesCreated('/start/connect-monobank/rules-created'),
   ready('/ready'),
   home('/home'),
+  stats('/stats'),
+  newAccount('/accounts/new'),
+  newTransaction('/transactions/new'),
+  transactionDetails('/transactions/new/details'),
   operations('/operations'),
   inbox('/inbox'),
   settings('/settings');

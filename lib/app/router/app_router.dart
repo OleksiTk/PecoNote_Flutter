@@ -6,11 +6,13 @@ import '../../features/auth/presentation/screens/auth_choice_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/password_reset_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
+import '../../features/accounts/presentation/screens/new_account_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/inbox/presentation/screens/inbox_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../../features/operations/presentation/screens/operations_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
+import '../../features/stats/presentation/screens/stats_screen.dart';
 import '../../features/startup/presentation/screens/connect_monobank_screen.dart';
 import '../../features/startup/presentation/screens/monobank_cards_screen.dart';
 import '../../features/startup/presentation/screens/monobank_done_screen.dart';
@@ -21,6 +23,9 @@ import '../../features/startup/presentation/screens/monobank_sort_screen.dart';
 import '../../features/startup/presentation/screens/monobank_syncing_screen.dart';
 import '../../features/startup/presentation/screens/start_choice_screen.dart';
 import '../../features/startup/presentation/screens/splash_screen.dart';
+import '../../features/transactions/presentation/models/transaction_draft.dart';
+import '../../features/transactions/presentation/screens/new_transaction_screen.dart';
+import '../../features/transactions/presentation/screens/transaction_details_screen.dart';
 import 'app_routes.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -153,7 +158,39 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoute.home.path,
         name: AppRoute.home.name,
-        builder: (context, state) => const HomeScreen(),
+        builder: (context, state) => HomeScreen(
+          startOnAddAccount:
+              state.uri.queryParameters['openAddAccount'] == 'true',
+        ),
+      ),
+      GoRoute(
+        path: AppRoute.stats.path,
+        name: AppRoute.stats.name,
+        builder: (context, state) => const StatsScreen(),
+      ),
+      GoRoute(
+        path: AppRoute.newAccount.path,
+        name: AppRoute.newAccount.name,
+        builder: (context, state) => const NewAccountScreen(),
+      ),
+      GoRoute(
+        path: AppRoute.newTransaction.path,
+        name: AppRoute.newTransaction.name,
+        builder: (context, state) => const NewTransactionScreen(),
+      ),
+      GoRoute(
+        path: AppRoute.transactionDetails.path,
+        name: AppRoute.transactionDetails.name,
+        builder: (context, state) => TransactionDetailsScreen(
+          draft:
+              state.extra as TransactionDraft? ??
+              const TransactionDraft(
+                kind: TransactionKind.expense,
+                wholeAmount: '0',
+                decimalAmount: '00',
+                accountLabel: 'Mono Black •4421',
+              ),
+        ),
       ),
       GoRoute(
         path: AppRoute.operations.path,

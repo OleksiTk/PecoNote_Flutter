@@ -64,7 +64,10 @@ class _StartChoiceScreenState extends ConsumerState<StartChoiceScreen> {
                 emoji: '✍️',
                 title: 'Add manually',
                 subtitle: 'Create an account and track operations yourself.',
-                onTap: () => _selectAndContinue(context, 'Add manually'),
+                onTap: () => context.goNamed(
+                  AppRoute.home.name,
+                  queryParameters: {'openAddAccount': 'true'},
+                ),
               ),
               const SizedBox(height: 14),
             ],
@@ -72,10 +75,6 @@ class _StartChoiceScreenState extends ConsumerState<StartChoiceScreen> {
         ),
       ),
     );
-  }
-
-  void _selectAndContinue(BuildContext context, String option) {
-    context.goNamed(AppRoute.ready.name, queryParameters: {'option': option});
   }
 }
 

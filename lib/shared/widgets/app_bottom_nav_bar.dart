@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../app/router/app_routes.dart';
 import '../../app/theme/app_colors.dart';
@@ -12,12 +13,15 @@ class AppBottomNavBar extends StatelessWidget {
   final AppNavTab activeTab;
 
   static const _items = [
-    (tab: AppNavTab.home, icon: Icons.home_outlined, label: 'Home'),
-    (tab: AppNavTab.ops, icon: Icons.format_list_bulleted, label: 'Ops'),
-    (tab: AppNavTab.inbox, icon: Icons.inbox_outlined, label: 'Inbox'),
-    (tab: AppNavTab.settings, icon: Icons.tune, label: 'Settings'),
+    (tab: AppNavTab.home, asset: 'assets/icons/home.svg', label: 'Home'),
+    (tab: AppNavTab.ops, asset: 'assets/icons/ops.svg', label: 'Ops'),
+    (tab: AppNavTab.inbox, asset: 'assets/icons/inbox.svg', label: 'Inbox'),
+    (
+      tab: AppNavTab.settings,
+      asset: 'assets/icons/settings.svg',
+      label: 'Settings',
+    ),
   ];
-
   void _onTap(BuildContext context, AppNavTab tab) {
     if (tab == activeTab) return;
     switch (tab) {
@@ -64,7 +68,9 @@ class AppBottomNavBar extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: _items.map((item) {
               final active = item.tab == activeTab;
-              final color = active ? AppColors.accentBlue : AppColors.grayText;
+              final color = active
+                  ? AppColors.textDark
+                  : AppColors.grayTextLight;
 
               return GestureDetector(
                 behavior: HitTestBehavior.opaque,
@@ -80,7 +86,15 @@ class AppBottomNavBar extends StatelessWidget {
                       Stack(
                         clipBehavior: Clip.none,
                         children: [
-                          Icon(item.icon, size: 22, color: color),
+                          SvgPicture.asset(
+                            item.asset,
+                            width: 22,
+                            height: 22,
+                            colorFilter: ColorFilter.mode(
+                              color,
+                              BlendMode.srcIn,
+                            ),
+                          ),
                           if (item.tab == AppNavTab.inbox)
                             Positioned(
                               right: -2,

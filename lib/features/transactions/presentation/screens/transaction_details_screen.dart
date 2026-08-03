@@ -1,0 +1,744 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+
+import '../../../../app/router/app_routes.dart';
+import '../../../../app/theme/app_colors.dart';
+import '../../../../shared/widgets/app_buttons.dart';
+import '../../../../shared/widgets/gradient_background.dart';
+import '../models/transaction_draft.dart';
+
+class _Category {
+  const _Category(this.emoji, this.label);
+
+  final String emoji;
+  final String label;
+}
+
+const _categories = [
+  _Category('🍜', 'Food'),
+  _Category('🛒', 'Groceries'),
+  _Category('🚗', 'Transport'),
+  _Category('☕️', 'Cafés'),
+];
+
+class _TransferAccount {
+  const _TransferAccount({
+    required this.icon,
+    required this.iconBg,
+    required this.iconFg,
+    required this.name,
+    required this.balance,
+  });
+
+  final IconData icon;
+  final Color iconBg;
+  final Color iconFg;
+  final String name;
+  final double balance;
+}
+
+const _monoBlack = _TransferAccount(
+  icon: Icons.credit_card,
+  iconBg: AppColors.iconBgMintLight,
+  iconFg: AppColors.iconFgGreen,
+  name: 'Mono Black •4421',
+  balance: 24850.70,
+);
+
+const _savingsJar = _TransferAccount(
+  icon: Icons.savings_outlined,
+  iconBg: AppColors.iconBgOrangeSoft,
+  iconFg: AppColors.iconFgOrangeSoft,
+  name: 'Savings jar',
+  balance: 1000,
+);
+
+class TransactionDetailsScreen extends StatefulWidget {
+  const TransactionDetailsScreen({super.key, required this.draft});
+
+  final TransactionDraft draft;
+
+  @override
+  State<TransactionDetailsScreen> createState() =>
+      _TransactionDetailsScreenState();
+}
+
+class _TransactionDetailsScreenState extends State<TransactionDetailsScreen> {
+  int _categoryIndex = 0;
+  DateTime _date = DateTime.now();
+  String? _note;
+  bool _repeatsMonthly = false;
+  bool _accountsSwapped = false;
+
+  _TransferAccount get _fromAccount =>
+      _accountsSwapped ? _savingsJar : _monoBlack;
+  _TransferAccount get _toAccount =>
+      _accountsSwapped ? _monoBlack : _savingsJar;
+
+  void _goBack() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.goNamed(AppRoute.home.name);
+    }
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _date,
+      firstDate: DateTime(_date.year - 5),
+      lastDate: DateTime(_date.year + 5),
+    );
+    if (picked != null) setState(() => _date = picked);
+  }
+
+  Future<void> _editNote() async {
+    final controller = TextEditingController(text: _note);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Note'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLines: 3,
+          decoration: const InputDecoration(hintText: 'Add a note…'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(controller.text.trim()),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    if (result != null) setState(() => _note = result.isEmpty ? null : result);
+  }
+
+  void _save() {
+    // Немає ще бекенду для транзакцій — повертаємось на Home, як і решта
+    // незавершених флоу в застосунку.
+    context.goNamed(AppRoute.home.name);
+  }
+
+  String get _dateLabel {
+    final now = DateTime.now();
+    final isToday =
+        _date.year == now.year &&
+        _date.month == now.month &&
+        _date.day == now.day;
+    final formatted = DateFormat('d MMM').format(_date);
+    return isToday ? 'Today, $formatted' : formatted;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final draft = widget.draft;
+    final isTransfer = draft.kind == TransactionKind.transfer;
+
+    return GradientBackground(
+      child: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                child: Row(
+                  children: [
+                    GlassBackButton(onPressed: _goBack),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Text(
+                        isTransfer ? 'Transfer' : 'Details',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.white.withValues(alpha: 0.75),
+                        borderRadius: BorderRadius.circular(99),
+                        border: Border.all(
+                          color: AppColors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                      child: const Text(
+                        'Step 2 of 2',
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 14, 20, 0),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.all(Radius.circular(99)),
+                  child: LinearProgressIndicator(
+                    value: 1,
+                    minHeight: 4,
+                    backgroundColor: AppColors.dotInactive,
+                    valueColor: AlwaysStoppedAnimation(AppColors.accentBlue),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                child: Row(
+                  children: [
+                    Text(
+                      '${draft.kind.sign}₴ ${draft.wholeAmount}.${draft.decimalAmount}',
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    GestureDetector(
+                      onTap: _goBack,
+                      behavior: HitTestBehavior.opaque,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.white.withValues(alpha: 0.8),
+                          borderRadius: BorderRadius.circular(99),
+                          border: Border.all(
+                            color: AppColors.white.withValues(alpha: 0.9),
+                          ),
+                        ),
+                        child: const Text(
+                          'edit',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.accentBlue,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (isTransfer) ...[
+                const _SectionLabel('FROM ACCOUNT'),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: _AccountCard(
+                    icon: _fromAccount.icon,
+                    iconBg: _fromAccount.iconBg,
+                    iconFg: _fromAccount.iconFg,
+                    name: _fromAccount.name,
+                    subtitle:
+                        '₴${formatCurrencyAmount(_fromAccount.balance)} available',
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 6, 44, 6),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: _SwapButton(
+                      onTap: () =>
+                          setState(() => _accountsSwapped = !_accountsSwapped),
+                    ),
+                  ),
+                ),
+                const _SectionLabel('TO ACCOUNT'),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: _AccountCard(
+                    icon: _toAccount.icon,
+                    iconBg: _toAccount.iconBg,
+                    iconFg: _toAccount.iconFg,
+                    name: _toAccount.name,
+                    subtitle:
+                        '₴${formatCurrencyAmount(_toAccount.balance)} · '
+                        'after: ₴${formatCurrencyAmount(_toAccount.balance + draft.amount)}',
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withValues(alpha: 0.65),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppColors.white.withValues(alpha: 0.75),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        _DetailRow(
+                          icon: Icons.calendar_today,
+                          iconBg: AppColors.accentBlueBg,
+                          iconFg: AppColors.accentBlue,
+                          label: 'Date',
+                          value: _dateLabel,
+                          onTap: _pickDate,
+                        ),
+                        const _DetailDivider(),
+                        _DetailRow(
+                          icon: Icons.description_outlined,
+                          iconBg: AppColors.iconBgRed,
+                          iconFg: AppColors.iconFgRed,
+                          label: 'Note',
+                          value: _note ?? 'optional',
+                          isPlaceholder: _note == null,
+                          onTap: _editNote,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: Text(
+                    'Transfers stay out of Statistics — they move money, '
+                    'they do not spend it.',
+                    style: TextStyle(fontSize: 12.5, color: AppColors.grayText),
+                  ),
+                ),
+              ] else ...[
+                const _SectionLabel('CATEGORY'),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      for (var i = 0; i < _categories.length; i++)
+                        _CategoryChip(
+                          emoji: _categories[i].emoji,
+                          label: _categories[i].label,
+                          selected: _categoryIndex == i,
+                          onTap: () => setState(() => _categoryIndex = i),
+                        ),
+                      const _AllCategoriesChip(),
+                    ],
+                  ),
+                ),
+                const _SectionLabel('WHERE IT COMES FROM'),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withValues(alpha: 0.65),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppColors.white.withValues(alpha: 0.75),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        _DetailRow(
+                          icon: Icons.credit_card,
+                          iconBg: AppColors.iconBgMintLight,
+                          iconFg: AppColors.iconFgGreen,
+                          label: 'Account',
+                          value: draft.accountLabel,
+                        ),
+                        const _DetailDivider(),
+                        _DetailRow(
+                          icon: Icons.calendar_today,
+                          iconBg: AppColors.accentBlueBg,
+                          iconFg: AppColors.accentBlue,
+                          label: 'Date',
+                          value: _dateLabel,
+                          onTap: _pickDate,
+                        ),
+                        const _DetailDivider(),
+                        _DetailRow(
+                          icon: Icons.description_outlined,
+                          iconBg: AppColors.iconBgRed,
+                          iconFg: AppColors.iconFgRed,
+                          label: 'Note',
+                          value: _note ?? 'optional',
+                          isPlaceholder: _note == null,
+                          onTap: _editNote,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+                  child: GestureDetector(
+                    onTap: () =>
+                        setState(() => _repeatsMonthly = !_repeatsMonthly),
+                    behavior: HitTestBehavior.opaque,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 20,
+                          height: 20,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: _repeatsMonthly
+                                ? AppColors.accentBlue
+                                : AppColors.white.withValues(alpha: 0.7),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: _repeatsMonthly
+                                  ? AppColors.accentBlue
+                                  : AppColors.white.withValues(alpha: 0.9),
+                            ),
+                          ),
+                          child: _repeatsMonthly
+                              ? const Icon(
+                                  Icons.check,
+                                  size: 14,
+                                  color: AppColors.white,
+                                )
+                              : null,
+                        ),
+                        const SizedBox(width: 10),
+                        const Text(
+                          'Repeats monthly',
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.grayText,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 40),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                child: PillButton(
+                  label: draft.kind.saveLabel,
+                  onPressed: _save,
+                  backgroundColor: AppColors.accentBlueMuted,
+                  foregroundColor: AppColors.white,
+                  borderColor: AppColors.accentBlueMuted,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 8),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: AppColors.labelGray,
+            letterSpacing: 0.6,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AccountCard extends StatelessWidget {
+  const _AccountCard({
+    required this.icon,
+    required this.iconBg,
+    required this.iconFg,
+    required this.name,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final Color iconBg;
+  final Color iconFg;
+  final String name;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: AppColors.white.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.white.withValues(alpha: 0.75)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: iconBg,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, size: 18, color: iconFg),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.grayText,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Icon(
+            Icons.chevron_right,
+            size: 18,
+            color: AppColors.grayTextLight,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SwapButton extends StatelessWidget {
+  const _SwapButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: Container(
+          width: 36,
+          height: 36,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.shadowBlue.withValues(alpha: 0.18),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.swap_vert,
+            size: 18,
+            color: AppColors.accentBlue,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CategoryChip extends StatelessWidget {
+  const _CategoryChip({
+    required this.emoji,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String emoji;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppColors.textDark
+              : AppColors.white.withValues(alpha: 0.7),
+          borderRadius: BorderRadius.circular(99),
+          border: Border.all(
+            color: selected
+                ? AppColors.textDark
+                : AppColors.white.withValues(alpha: 0.9),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 14)),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: selected ? AppColors.white : AppColors.textDark,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AllCategoriesChip extends StatelessWidget {
+  const _AllCategoriesChip();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.white.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(color: AppColors.accentBlue.withValues(alpha: 0.5)),
+      ),
+      child: const Text(
+        'All categories',
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: AppColors.accentBlue,
+        ),
+      ),
+    );
+  }
+}
+
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({
+    required this.icon,
+    required this.iconBg,
+    required this.iconFg,
+    required this.label,
+    required this.value,
+    this.isPlaceholder = false,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final Color iconBg;
+  final Color iconFg;
+  final String label;
+  final String value;
+  final bool isPlaceholder;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, size: 16, color: iconFg),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textDark,
+                  ),
+                ),
+              ),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: isPlaceholder
+                      ? AppColors.placeholderGray
+                      : AppColors.grayText,
+                ),
+              ),
+              const SizedBox(width: 4),
+              const Icon(
+                Icons.chevron_right,
+                size: 18,
+                color: AppColors.grayTextLight,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DetailDivider extends StatelessWidget {
+  const _DetailDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Divider(
+      height: 1,
+      indent: 16,
+      endIndent: 16,
+      color: AppColors.white.withValues(alpha: 0.8),
+    );
+  }
+}
