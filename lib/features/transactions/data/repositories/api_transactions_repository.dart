@@ -32,6 +32,7 @@ class ApiTransactionsRepository implements TransactionsRepository {
     required DateTime occurredAt,
     String? destinationAccountId,
     String? description,
+    List<int> tagIds = const [],
   }) async {
     try {
       final counterpartyId = await _resolveCounterpartyId(counterpartyName);
@@ -47,7 +48,21 @@ class ApiTransactionsRepository implements TransactionsRepository {
         'counterparty': counterpartyId,
         'description': description,
         'tr_datetime': occurredAt.toUtc().toIso8601String(),
+        'tag': type == TransactionType.transfer ? const <int>[] : tagIds,
       });
+      return _fromJson(json);
+    } on DioException catch (error) {
+      throw _failureFrom(error);
+    }
+  }
+
+  @override
+  Future<Transaction> updateTags({
+    required String id,
+    required List<int> tagIds,
+  }) async {
+    try {
+      final json = await _remoteDataSource.updateTags(id, tagIds);
       return _fromJson(json);
     } on DioException catch (error) {
       throw _failureFrom(error);
@@ -82,6 +97,7 @@ class ApiTransactionsRepository implements TransactionsRepository {
         DateTime.tryParse(json['tr_datetime'] as String? ?? '') ??
         DateTime.now();
     final destinationAccount = json['destination_account'];
+    final tags = json['tag'];
     return Transaction(
       id: id,
       type: _typeFromJson(json['type'] as String?),
@@ -92,6 +108,13 @@ class ApiTransactionsRepository implements TransactionsRepository {
       currencyId: json['currency'] as int,
       counterpartyId: json['counterparty'] as int,
       description: json['description'] as String?,
+      tagIds: tags is List
+          ? tags
+                .map((tag) => tag is Map ? tag['id'] : tag)
+                .whereType<num>()
+                .map((id) => id.toInt())
+                .toList()
+          : const [],
       occurredAt: occurredAt,
       isTrashed: json['is_trashed'] as bool? ?? false,
       sync: SyncMetadata(

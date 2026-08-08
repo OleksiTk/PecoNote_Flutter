@@ -15,6 +15,7 @@ final dioProvider = Provider<Dio>((ref) {
       receiveTimeout: const Duration(seconds: 20),
       headers: const {
         'Accept': 'application/json',
+        'Accept-Language': AppConfig.defaultLanguageCode,
         'Content-Type': 'application/json',
       },
     ),
@@ -49,6 +50,7 @@ class AuthTokenInterceptor extends QueuedInterceptor {
            receiveTimeout: const Duration(seconds: 20),
            headers: const {
              'Accept': 'application/json',
+             'Accept-Language': AppConfig.defaultLanguageCode,
              'Content-Type': 'application/json',
            },
          ),

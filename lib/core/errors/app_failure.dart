@@ -16,6 +16,10 @@ class AuthenticationFailure extends AppFailure {
   const AuthenticationFailure(super.message);
 }
 
+class NotFoundFailure extends AppFailure {
+  const NotFoundFailure(super.message);
+}
+
 class ValidationFailure extends AppFailure {
   const ValidationFailure(super.message, this.fieldErrors);
 

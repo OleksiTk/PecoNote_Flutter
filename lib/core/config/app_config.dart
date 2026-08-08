@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 abstract final class AppConfig {
   static const _fallbackApiUrl = 'http://localhost:8006/v1.0';
   static const _fallbackAppTitle = 'PecoNote';
+  static const defaultLanguageCode = 'en';
 
   static String get apiUrl {
     return _read('API_URL', _fallbackApiUrl).replaceFirst(RegExp(r'/$'), '');

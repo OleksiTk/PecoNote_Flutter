@@ -33,6 +33,26 @@ class AccountsNotifier extends AsyncNotifier<List<Account>> {
     state = AsyncData([...?state.value, created]);
   }
 
+  Future<void> updateAccount({
+    required String id,
+    required String name,
+    String? description,
+    required int currencyId,
+  }) async {
+    final updated = await ref
+        .read(accountsRepositoryProvider)
+        .update(
+          id: id,
+          name: name,
+          description: description,
+          currencyId: currencyId,
+        );
+    state = AsyncData([
+      for (final account in state.value ?? const <Account>[])
+        if (account.id == updated.id) updated else account,
+    ]);
+  }
+
   Future<void> delete(String id) async {
     await ref.read(accountsRepositoryProvider).delete(id);
     state = AsyncData(

@@ -12,6 +12,12 @@ abstract interface class TransactionsRepository {
     required DateTime occurredAt,
     String? destinationAccountId,
     String? description,
+    List<int> tagIds = const [],
+  });
+
+  Future<Transaction> updateTags({
+    required String id,
+    required List<int> tagIds,
   });
 
   Future<void> trash(String id);

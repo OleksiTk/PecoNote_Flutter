@@ -9,5 +9,12 @@ abstract interface class AccountsRepository {
     required int currencyId,
   });
 
+  Future<Account> update({
+    required String id,
+    required String name,
+    String? description,
+    required int currencyId,
+  });
+
   Future<void> delete(String id);
 }

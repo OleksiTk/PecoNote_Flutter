@@ -32,6 +32,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
     required DateTime occurredAt,
     String? destinationAccountId,
     String? description,
+    List<int> tagIds = const [],
   }) async {
     final created = await ref
         .read(transactionsRepositoryProvider)
@@ -44,8 +45,22 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
           occurredAt: occurredAt,
           destinationAccountId: destinationAccountId,
           description: description,
+          tagIds: tagIds,
         );
     state = AsyncData([created, ...?state.value]);
+  }
+
+  Future<void> updateTransactionTags({
+    required String id,
+    required List<int> tagIds,
+  }) async {
+    final updated = await ref
+        .read(transactionsRepositoryProvider)
+        .updateTags(id: id, tagIds: tagIds);
+    state = AsyncData([
+      for (final transaction in state.value ?? const <Transaction>[])
+        if (transaction.id == updated.id) updated else transaction,
+    ]);
   }
 
   Future<void> trash(String id) async {

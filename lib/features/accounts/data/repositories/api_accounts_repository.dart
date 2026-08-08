@@ -41,6 +41,26 @@ class ApiAccountsRepository implements AccountsRepository {
   }
 
   @override
+  Future<Account> update({
+    required String id,
+    required String name,
+    String? description,
+    required int currencyId,
+  }) async {
+    try {
+      final json = await _remoteDataSource.update(
+        id: id,
+        name: name,
+        description: description,
+        currencyId: currencyId,
+      );
+      return _fromJson(json);
+    } on DioException catch (error) {
+      throw _failureFrom(error);
+    }
+  }
+
+  @override
   Future<void> delete(String id) async {
     try {
       await _remoteDataSource.delete(id);
@@ -71,9 +91,10 @@ class ApiAccountsRepository implements AccountsRepository {
   }
 
   AppFailure _failureFrom(DioException error) {
+    final statusCode = error.response?.statusCode;
     final data = error.response?.data;
     final fieldErrors = <String, List<String>>{};
-    if (data is Map) {
+    if (statusCode == 400 && data is Map) {
       for (final entry in data.entries) {
         if (entry.key == 'detail') continue;
         final value = entry.value;
@@ -91,12 +112,14 @@ class ApiAccountsRepository implements AccountsRepository {
           fieldErrors,
         );
       }
-      final detail = data['detail'];
-      if (detail is String && detail.isNotEmpty) {
-        return error.response?.statusCode == 401
-            ? AuthenticationFailure(detail)
-            : NetworkFailure(detail);
-      }
+    }
+    if (statusCode == 401) {
+      return const AuthenticationFailure(
+        'Your session has expired. Please sign in again.',
+      );
+    }
+    if (statusCode == 404) {
+      return const NotFoundFailure('This account no longer exists.');
     }
     return const NetworkFailure(
       'Could not connect to the server. Please try again.',

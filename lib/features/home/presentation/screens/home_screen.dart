@@ -24,6 +24,9 @@ const double _hPad = 15;
 /// Висота картки в каруселі (з макета).
 const double _cardHeight = 186;
 
+const int _accountNameMaxLength = 64;
+const int _accountDescriptionMaxLength = 256;
+
 /// Домашній екран PecoNote: карусель рахунків підтягується з GET /accounts/,
 /// а стрічка "Recent transactions" — з GET /transactions/. Створення й
 /// видалення обох йдуть через ту саму API.
@@ -80,6 +83,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     if (mounted) _toggleCardFlip();
   }
 
+  Future<void> _updateAccount(
+    Account account, {
+    required String name,
+    String? description,
+  }) {
+    return ref
+        .read(accountsProvider.notifier)
+        .updateAccount(
+          id: account.id,
+          name: name,
+          description: description,
+          currencyId: account.currencyId,
+        );
+  }
+
+  void _handleMissingAccount() {
+    if (_cardFlipped) _toggleCardFlip();
+    ref.invalidate(accountsProvider);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('This account no longer exists.')),
+    );
+  }
+
   Future<void> _deleteTransaction(Transaction transaction) {
     return ref.read(transactionsProvider.notifier).trash(transaction.id);
   }
@@ -93,6 +119,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final pageCount = isLoaded ? accounts.length + 1 : 1;
     final showEditSheet = _cardFlipped && _accountsPage < accounts.length;
     final transactionsAsync = ref.watch(transactionsProvider);
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
 
     return GradientBackground(
       child: Stack(
@@ -105,21 +132,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   padding: EdgeInsets.fromLTRB(_hPad, 18, _hPad, 0),
                   child: _HomeHeader(),
                 ),
-                _AccountsCarousel(
-                  // Новий ключ на кожну зміну кількості сторінок — це
-                  // перестворює PageController з правильним initialPage,
-                  // коли список рахунків щойно завантажився.
-                  key: ValueKey('accounts-$pageCount'),
-                  accounts: accounts,
-                  pageCount: pageCount,
-                  addAccountIndex: addAccountIndex,
-                  isLoading: accountsAsync.isLoading && !accountsAsync.hasValue,
-                  hasError: accountsAsync.hasError,
-                  onRetry: () => ref.invalidate(accountsProvider),
-                  onPageChanged: (page) =>
-                      _onAccountsPageChanged(page, addAccountIndex),
-                  flipController: _flipController,
-                  onCardTap: _toggleCardFlip,
+                Offstage(
+                  offstage: keyboardOpen,
+                  child: _AccountsCarousel(
+                    // Новий ключ на кожну зміну кількості сторінок — це
+                    // перестворює PageController з правильним initialPage,
+                    // коли список рахунків щойно завантажився.
+                    key: ValueKey('accounts-$pageCount'),
+                    accounts: accounts,
+                    pageCount: pageCount,
+                    addAccountIndex: addAccountIndex,
+                    isLoading:
+                        accountsAsync.isLoading && !accountsAsync.hasValue,
+                    hasError: accountsAsync.hasError,
+                    onRetry: () => ref.invalidate(accountsProvider),
+                    onPageChanged: (page) =>
+                        _onAccountsPageChanged(page, addAccountIndex),
+                    flipController: _flipController,
+                    onCardTap: _toggleCardFlip,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Expanded(
@@ -128,7 +159,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     child: showEditSheet
                         ? _EditCardSheet(
                             account: accounts[_accountsPage],
+                            onSave: (name, description) => _updateAccount(
+                              accounts[_accountsPage],
+                              name: name,
+                              description: description,
+                            ),
                             onDone: _toggleCardFlip,
+                            onAccountMissing: _handleMissingAccount,
                             onDelete: () =>
                                 _deleteAccount(accounts[_accountsPage]),
                           )
@@ -144,24 +181,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
           ),
 
-          Positioned(
-            right: 32,
-            bottom: 118,
-            child: GestureDetector(
-              onTap: () => context.pushNamed(AppRoute.newTransaction.name),
-              child: const _AddButton(),
+          if (!keyboardOpen)
+            Positioned(
+              right: 32,
+              bottom: 118,
+              child: GestureDetector(
+                onTap: () => context.pushNamed(AppRoute.newTransaction.name),
+                child: const _AddButton(),
+              ),
             ),
-          ),
 
-          const Positioned(
-            left: 0,
-            right: 0,
-            bottom: -5,
-            child: SafeArea(
-              top: false,
-              child: AppBottomNavBar(activeTab: AppNavTab.home),
+          if (!keyboardOpen)
+            const Positioned(
+              left: 0,
+              right: 0,
+              bottom: -5,
+              child: SafeArea(
+                top: false,
+                child: AppBottomNavBar(activeTab: AppNavTab.home),
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -264,6 +303,7 @@ class _AccountsCarouselState extends State<_AccountsCarousel> {
           height: _cardHeight,
           child: PageView.builder(
             controller: _controller,
+            clipBehavior: Clip.none,
             itemCount: widget.pageCount,
             onPageChanged: (i) {
               setState(() => _page = i);
@@ -937,12 +977,16 @@ class _GlassSheet extends StatelessWidget {
 class _EditCardSheet extends StatefulWidget {
   const _EditCardSheet({
     required this.account,
+    required this.onSave,
     required this.onDone,
+    required this.onAccountMissing,
     required this.onDelete,
   });
 
   final Account account;
+  final Future<void> Function(String name, String? description) onSave;
   final VoidCallback onDone;
+  final VoidCallback onAccountMissing;
   final Future<void> Function() onDelete;
 
   @override
@@ -954,17 +998,20 @@ class _EditCardSheetState extends State<_EditCardSheet> {
   late final _description = TextEditingController(
     text: widget.account.description ?? '',
   );
-  int _designIndex = 0;
+  bool _saving = false;
   bool _deleting = false;
+  Map<String, List<String>> _fieldErrors = const {};
+  String? _saveError;
   String? _deleteError;
 
-  static const _designColors = [
-    Color(0xFF262B3D),
-    AppColors.accentBlueSoft,
-    AppColors.success,
-    Color(0xFFE8916A),
-    Color(0xFFB98CD9),
-  ];
+  String? _fieldError(String field) => _fieldErrors[field]?.join('\n');
+
+  void _clearFieldError(String field) {
+    if (!_fieldErrors.containsKey(field)) return;
+    setState(() {
+      _fieldErrors = Map.of(_fieldErrors)..remove(field);
+    });
+  }
 
   @override
   void dispose() {
@@ -973,13 +1020,55 @@ class _EditCardSheetState extends State<_EditCardSheet> {
     super.dispose();
   }
 
+  Future<void> _save() async {
+    if (_saving || _deleting) return;
+
+    final name = _name.text.trim();
+    final description = _description.text.trim();
+    if (name.isEmpty) {
+      setState(() {
+        _fieldErrors = const {
+          'name': ['Enter an account name.'],
+        };
+        _saveError = null;
+      });
+      return;
+    }
+
+    setState(() {
+      _saving = true;
+      _fieldErrors = const {};
+      _saveError = null;
+    });
+    try {
+      await widget.onSave(name, description.isEmpty ? null : description);
+      if (mounted) widget.onDone();
+    } on NotFoundFailure {
+      if (mounted) widget.onAccountMissing();
+    } on ValidationFailure catch (failure) {
+      if (mounted) {
+        final hasUnboundErrors = failure.fieldErrors.keys.any(
+          (field) => field != 'name' && field != 'description',
+        );
+        setState(() {
+          _fieldErrors = failure.fieldErrors;
+          _saveError = hasUnboundErrors ? failure.message : null;
+        });
+      }
+    } on AppFailure catch (failure) {
+      if (mounted) setState(() => _saveError = failure.message);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
   Future<void> _confirmDelete() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete this card?'),
         content: const Text(
-          'This removes the card and its transaction history.',
+          'The account can be deleted only if it has no linked transactions.',
         ),
         actions: [
           TextButton(
@@ -996,7 +1085,7 @@ class _EditCardSheetState extends State<_EditCardSheet> {
         ],
       ),
     );
-    if (confirmed != true || !mounted) return;
+    if (confirmed != true || !mounted || _saving) return;
 
     setState(() {
       _deleting = true;
@@ -1004,8 +1093,14 @@ class _EditCardSheetState extends State<_EditCardSheet> {
     });
     try {
       await widget.onDelete();
-    } on AppFailure catch (failure) {
-      if (mounted) setState(() => _deleteError = failure.message);
+    } on AppFailure {
+      if (mounted) {
+        setState(
+          () => _deleteError =
+              'Не вдалося видалити рахунок. Перевірте, чи немає '
+              'пов’язаних транзакцій.',
+        );
+      }
     } finally {
       if (mounted) setState(() => _deleting = false);
     }
@@ -1031,11 +1126,11 @@ class _EditCardSheetState extends State<_EditCardSheet> {
                 ),
                 const Spacer(),
                 GestureDetector(
-                  onTap: widget.onDone,
+                  onTap: _saving || _deleting ? null : _save,
                   behavior: HitTestBehavior.opaque,
-                  child: const Text(
-                    'Done',
-                    style: TextStyle(
+                  child: Text(
+                    _saving ? 'Saving…' : 'Done',
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: AppColors.accentBlue,
@@ -1049,15 +1144,27 @@ class _EditCardSheetState extends State<_EditCardSheet> {
               label: 'NAME',
               child: TextField(
                 controller: _name,
+                enabled: !_saving && !_deleting,
+                maxLength: _accountNameMaxLength,
+                buildCounter:
+                    (
+                      context, {
+                      required currentLength,
+                      required isFocused,
+                      maxLength,
+                    }) => null,
+                textInputAction: TextInputAction.next,
+                onChanged: (_) => _clearFieldError('name'),
                 style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textDark,
                 ),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   isDense: true,
                   contentPadding: EdgeInsets.zero,
                   border: InputBorder.none,
+                  errorText: _fieldError('name'),
                 ),
               ),
             ),
@@ -1066,87 +1173,39 @@ class _EditCardSheetState extends State<_EditCardSheet> {
               label: 'DESCRIPTION',
               child: TextField(
                 controller: _description,
+                enabled: !_saving && !_deleting,
+                maxLength: _accountDescriptionMaxLength,
+                buildCounter:
+                    (
+                      context, {
+                      required currentLength,
+                      required isFocused,
+                      maxLength,
+                    }) => null,
+                textInputAction: TextInputAction.done,
+                onChanged: (_) => _clearFieldError('description'),
+                onSubmitted: (_) => _save(),
                 style: const TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w500,
                   color: AppColors.textDark,
                 ),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   isDense: true,
                   contentPadding: EdgeInsets.zero,
                   border: InputBorder.none,
+                  errorText: _fieldError('description'),
                 ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            LabeledField(
-              label: 'DESIGN',
-              child: Row(
-                children: [
-                  for (var i = 0; i < _designColors.length; i++) ...[
-                    if (i > 0) const SizedBox(width: 12),
-                    GestureDetector(
-                      onTap: () => setState(() => _designIndex = i),
-                      child: Container(
-                        width: 28,
-                        height: 28,
-                        decoration: BoxDecoration(
-                          color: _designColors[i],
-                          shape: BoxShape.circle,
-                          border: _designIndex == i
-                              ? Border.all(color: AppColors.textDark, width: 2)
-                              : null,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(height: 14),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                color: AppColors.white.withValues(alpha: 0.65),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: AppColors.white.withValues(alpha: 0.75),
-                ),
-              ),
-              child: const Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Rules & categories',
-                          style: TextStyle(
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textDark,
-                          ),
-                        ),
-                        SizedBox(height: 2),
-                        Text(
-                          '4 rules apply to this card',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.grayText,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(
-                    Icons.chevron_right,
-                    size: 20,
-                    color: AppColors.grayTextLight,
-                  ),
-                ],
               ),
             ),
             const SizedBox(height: 18),
+            if (_saveError != null) ...[
+              Text(
+                _saveError!,
+                style: const TextStyle(color: AppColors.error, fontSize: 13),
+              ),
+              const SizedBox(height: 8),
+            ],
             if (_deleteError != null) ...[
               Text(
                 _deleteError!,
@@ -1155,14 +1214,14 @@ class _EditCardSheetState extends State<_EditCardSheet> {
               const SizedBox(height: 8),
             ],
             GestureDetector(
-              onTap: _deleting ? null : _confirmDelete,
+              onTap: _deleting || _saving ? null : _confirmDelete,
               behavior: HitTestBehavior.opaque,
               child: Text(
                 _deleting ? 'Deleting…' : 'Delete card',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: _deleting
+                  color: _deleting || _saving
                       ? AppColors.error.withValues(alpha: 0.5)
                       : AppColors.error,
                 ),

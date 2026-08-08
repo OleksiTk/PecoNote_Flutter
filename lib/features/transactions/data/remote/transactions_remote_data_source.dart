@@ -28,6 +28,14 @@ class TransactionsRemoteDataSource {
     return response.data ?? const {};
   }
 
+  Future<Map<String, dynamic>> updateTags(String id, List<int> tagIds) async {
+    final response = await _dio.patch<Map<String, dynamic>>(
+      '/transactions/$id/',
+      data: {'tag': tagIds},
+    );
+    return response.data ?? const {};
+  }
+
   Future<void> trash(String id) {
     return _dio.patch<void>('/transactions/$id/trash/');
   }

@@ -14,6 +14,7 @@ class Transaction {
     required this.occurredAt,
     required this.isTrashed,
     required this.sync,
+    this.tagIds = const [],
     this.destinationAccountId,
     this.description,
   });
@@ -27,6 +28,7 @@ class Transaction {
   final int currencyId;
   final int counterpartyId;
   final String? description;
+  final List<int> tagIds;
   final DateTime occurredAt;
   final bool isTrashed;
   final SyncMetadata sync;

@@ -89,9 +89,16 @@ class _NewTransactionScreenState extends ConsumerState<NewTransactionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final decimalDisplay = (_decimal ?? '').padRight(2, '0');
+    final enteredAmount = _decimal == null
+        ? _groupedWhole
+        : '$_groupedWhole.${_decimal!}';
+    final decimalPlaceholder = _decimal == null
+        ? '.00'
+        : ''.padRight(2 - _decimal!.length, '0');
     final accounts = ref.watch(accountsProvider).value ?? const [];
-    final accountLabel = accounts.isEmpty ? 'No account yet' : accounts.first.name;
+    final accountLabel = accounts.isEmpty
+        ? 'No account yet'
+        : accounts.first.name;
 
     return GradientBackground(
       child: SafeArea(
@@ -173,24 +180,9 @@ class _NewTransactionScreenState extends ConsumerState<NewTransactionScreen> {
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
                 children: [
-                  Text(
-                    '${_kind.sign}₴ $_groupedWhole',
-                    style: const TextStyle(
-                      fontSize: 34,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                  Text(
-                    '.$decimalDisplay',
-                    style: const TextStyle(
-                      fontSize: 34,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.balanceCentsText,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Container(width: 2, height: 30, color: AppColors.accentBlue),
+                  Text('${_kind.sign}₴ ', style: _amountWholeStyle),
+                  _AmountEditableText(text: enteredAmount),
+                  Text(decimalPlaceholder, style: _amountDecimalStyle),
                 ],
               ),
               const SizedBox(height: 14),
@@ -238,6 +230,117 @@ class _NewTransactionScreenState extends ConsumerState<NewTransactionScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+const _amountWholeStyle = TextStyle(
+  fontSize: 34,
+  fontWeight: FontWeight.w800,
+  color: AppColors.textDark,
+);
+
+const _amountDecimalStyle = TextStyle(
+  fontSize: 34,
+  fontWeight: FontWeight.w700,
+  color: AppColors.balanceCentsText,
+);
+
+class _AmountEditableText extends StatefulWidget {
+  const _AmountEditableText({required this.text});
+
+  final String text;
+
+  @override
+  State<_AmountEditableText> createState() => _AmountEditableTextState();
+}
+
+class _AmountEditableTextState extends State<_AmountEditableText> {
+  late final _controller = _AmountTextController(widget.text);
+  final _focusNode = FocusNode();
+
+  @override
+  void didUpdateWidget(covariant _AmountEditableText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.text != oldWidget.text) {
+      _controller.value = TextEditingValue(
+        text: widget.text,
+        selection: TextSelection.collapsed(offset: widget.text.length),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textPainter = TextPainter(
+      text: _controller.buildTextSpan(
+        context: context,
+        style: _amountWholeStyle,
+        withComposing: false,
+      ),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      maxLines: 1,
+    )..layout();
+
+    return SizedBox(
+      width: textPainter.width + 6,
+      height: textPainter.height,
+      child: EditableText(
+        controller: _controller,
+        focusNode: _focusNode,
+        autofocus: true,
+        readOnly: true,
+        showCursor: true,
+        rendererIgnoresPointer: true,
+        enableInteractiveSelection: false,
+        style: _amountWholeStyle,
+        cursorColor: AppColors.accentBlue,
+        backgroundCursorColor: AppColors.grayText,
+        cursorWidth: 2,
+        cursorHeight: 30,
+        cursorRadius: const Radius.circular(99),
+        cursorOpacityAnimates: true,
+        selectionColor: AppColors.transparent,
+        maxLines: 1,
+      ),
+    );
+  }
+}
+
+class _AmountTextController extends TextEditingController {
+  _AmountTextController(String text) : super(text: text) {
+    selection = TextSelection.collapsed(offset: text.length);
+  }
+
+  @override
+  TextSpan buildTextSpan({
+    required BuildContext context,
+    TextStyle? style,
+    required bool withComposing,
+  }) {
+    final decimalIndex = text.indexOf('.');
+    if (decimalIndex == -1) {
+      return TextSpan(text: text, style: _amountWholeStyle);
+    }
+    return TextSpan(
+      children: [
+        TextSpan(
+          text: text.substring(0, decimalIndex),
+          style: _amountWholeStyle,
+        ),
+        TextSpan(
+          text: text.substring(decimalIndex),
+          style: _amountDecimalStyle,
+        ),
+      ],
     );
   }
 }

@@ -18,7 +18,7 @@ class PecoNoteApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       routerConfig: router,
       theme: buildAppTheme(),
-      locale: const Locale('en'),
+      locale: const Locale(AppConfig.defaultLanguageCode),
       supportedLocales: const [Locale('en'), Locale('uk')],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
