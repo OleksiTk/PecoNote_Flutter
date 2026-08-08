@@ -12,7 +12,7 @@ import '../../../../shared/widgets/app_buttons.dart';
 import '../../../../shared/widgets/gradient_background.dart';
 import '../../../categories/application/providers/categories_providers.dart';
 import '../../../categories/domain/entities/category.dart';
-import '../../../categories/domain/entities/category_tree.dart';
+import '../../../categories/presentation/screens/categories_page.dart';
 import '../../../settings/application/providers/settings_providers.dart';
 import '../../application/providers/transactions_providers.dart';
 import '../../domain/entities/transaction.dart' show TransactionType;
@@ -187,29 +187,13 @@ class _TransactionDetailsScreenState
   }
 
   Future<void> _openCategoryPicker(List<Category> categories) async {
-    final result = await showModalBottomSheet<_CategoryPickerResult>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.transparent,
-      builder: (context) => _CategoryPickerSheet(
-        categories: categories,
-        selectedCategoryId: _selectedCategoryId,
+    final result = await Navigator.of(context).push<CategoryPickResult>(
+      MaterialPageRoute(
+        builder: (context) =>
+            CategoriesPage(selectedCategoryId: _selectedCategoryId),
       ),
     );
     if (result == null || !mounted) return;
-
-    if (result.createNew) {
-      final created = await showDialog<Category>(
-        context: context,
-        builder: (context) => _CreateCategoryDialog(categories: categories),
-      );
-      if (created == null || !mounted) return;
-      setState(() {
-        _selectedCategoryId = created.id;
-        _categoryError = null;
-      });
-      return;
-    }
 
     setState(() {
       _selectedCategoryId = result.categoryId;
@@ -705,14 +689,14 @@ class _CategorySelector extends StatelessWidget {
               runSpacing: 10,
               children: [
                 _CategoryChip(
-                  icon: Icons.not_interested_outlined,
+                  emoji: '🚫',
                   label: 'No category',
                   selected: selectedCategoryId == null,
                   onTap: () => onSelected(null),
                 ),
                 for (final category in quickCategories)
                   _CategoryChip(
-                    icon: Icons.sell_outlined,
+                    emoji: categoryEmoji(category),
                     label: category.name,
                     selected: selectedCategoryId == category.id,
                     onTap: () => onSelected(category.id),
@@ -779,13 +763,13 @@ List<Category> _quickCategories(
 
 class _CategoryChip extends StatelessWidget {
   const _CategoryChip({
-    required this.icon,
+    required this.emoji,
     required this.label,
     required this.selected,
     required this.onTap,
   });
 
-  final IconData icon;
+  final String emoji;
   final String label;
   final bool selected;
   final VoidCallback onTap;
@@ -815,11 +799,7 @@ class _CategoryChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 15,
-              color: selected ? AppColors.white : AppColors.grayText,
-            ),
+            Text(emoji, style: const TextStyle(fontSize: 14)),
             const SizedBox(width: 6),
             Flexible(
               child: Text(
@@ -868,348 +848,6 @@ class _AllCategoriesChip extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _CategoryPickerResult {
-  const _CategoryPickerResult.selection(this.categoryId) : createNew = false;
-  const _CategoryPickerResult.create() : categoryId = null, createNew = true;
-
-  final int? categoryId;
-  final bool createNew;
-}
-
-class _CategoryPickerSheet extends StatelessWidget {
-  const _CategoryPickerSheet({
-    required this.categories,
-    required this.selectedCategoryId,
-  });
-
-  final List<Category> categories;
-  final int? selectedCategoryId;
-
-  @override
-  Widget build(BuildContext context) {
-    final rows = _flattenCategoryTree(categories);
-    return DraggableScrollableSheet(
-      expand: false,
-      initialChildSize: 0.72,
-      minChildSize: 0.45,
-      maxChildSize: 0.9,
-      builder: (context, scrollController) => Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFFF4F5F8),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: ListView(
-            controller: scrollController,
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
-            children: [
-              Center(
-                child: Container(
-                  width: 42,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.grayTextLight.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'All categories',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textDark,
-                ),
-              ),
-              const SizedBox(height: 10),
-              _CategoryPickerRow(
-                icon: Icons.not_interested_outlined,
-                label: 'No category',
-                selected: selectedCategoryId == null,
-                depth: 0,
-                onTap: () => Navigator.of(
-                  context,
-                ).pop(const _CategoryPickerResult.selection(null)),
-              ),
-              for (final row in rows)
-                _CategoryPickerRow(
-                  icon: row.depth == 0
-                      ? Icons.folder_outlined
-                      : Icons.sell_outlined,
-                  label: row.category.name,
-                  selected: selectedCategoryId == row.category.id,
-                  depth: row.depth,
-                  onTap: () => Navigator.of(
-                    context,
-                  ).pop(_CategoryPickerResult.selection(row.category.id)),
-                ),
-              const Divider(height: 24),
-              _CategoryPickerRow(
-                icon: Icons.add,
-                label: 'Create category',
-                selected: false,
-                depth: 0,
-                accent: true,
-                onTap: () => Navigator.of(
-                  context,
-                ).pop(const _CategoryPickerResult.create()),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CategoryTreeRow {
-  const _CategoryTreeRow(this.category, this.depth);
-
-  final Category category;
-  final int depth;
-}
-
-List<_CategoryTreeRow> _flattenCategoryTree(List<Category> categories) {
-  final rows = <_CategoryTreeRow>[];
-  final includedIds = <int>{};
-
-  void addItem(CategoryTreeItem item, int depth) {
-    if (!includedIds.add(item.category.id)) return;
-    rows.add(_CategoryTreeRow(item.category, depth));
-    for (final child in item.children) {
-      addItem(child, depth + 1);
-    }
-  }
-
-  for (final root in buildCategoryTree(categories)) {
-    addItem(root, 0);
-  }
-  for (final category in categories) {
-    if (includedIds.add(category.id)) {
-      rows.add(_CategoryTreeRow(category, 0));
-    }
-  }
-  return rows;
-}
-
-class _CategoryPickerRow extends StatelessWidget {
-  const _CategoryPickerRow({
-    required this.icon,
-    required this.label,
-    required this.selected,
-    required this.depth,
-    required this.onTap,
-    this.accent = false,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final int depth;
-  final VoidCallback onTap;
-  final bool accent;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = accent ? AppColors.accentBlue : AppColors.textDark;
-    return Material(
-      color: selected
-          ? AppColors.accentBlueBg.withValues(alpha: 0.7)
-          : AppColors.transparent,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(14 + depth * 20, 12, 14, 12),
-          child: Row(
-            children: [
-              Icon(icon, size: 19, color: color),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: depth == 0 || accent
-                        ? FontWeight.w700
-                        : FontWeight.w600,
-                    color: color,
-                  ),
-                ),
-              ),
-              if (selected)
-                const Icon(Icons.check, size: 19, color: AppColors.accentBlue),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CreateCategoryDialog extends ConsumerStatefulWidget {
-  const _CreateCategoryDialog({required this.categories});
-
-  final List<Category> categories;
-
-  @override
-  ConsumerState<_CreateCategoryDialog> createState() =>
-      _CreateCategoryDialogState();
-}
-
-class _CreateCategoryDialogState extends ConsumerState<_CreateCategoryDialog> {
-  final _name = TextEditingController();
-  final _description = TextEditingController();
-  int? _parentId;
-  bool _saving = false;
-  Map<String, List<String>> _fieldErrors = const {};
-  String? _error;
-
-  String? _fieldError(String field) => _fieldErrors[field]?.join('\n');
-
-  @override
-  void dispose() {
-    _name.dispose();
-    _description.dispose();
-    super.dispose();
-  }
-
-  Future<void> _save() async {
-    final name = _name.text.trim();
-    if (name.isEmpty || _saving) {
-      if (name.isEmpty) {
-        setState(() {
-          _fieldErrors = const {
-            'name': ['Enter a category name.'],
-          };
-        });
-      }
-      return;
-    }
-
-    setState(() {
-      _saving = true;
-      _fieldErrors = const {};
-      _error = null;
-    });
-    try {
-      final description = _description.text.trim();
-      final created = await ref
-          .read(categoriesProvider.notifier)
-          .createCategory(
-            name: name,
-            description: description.isEmpty ? null : description,
-            parentId: _parentId,
-          );
-      if (mounted) Navigator.of(context).pop(created);
-    } on ValidationFailure catch (failure) {
-      if (mounted) {
-        setState(() {
-          _fieldErrors = failure.fieldErrors;
-          _error =
-              failure.fieldErrors.keys.any(
-                (field) => field != 'name' && field != 'description',
-              )
-              ? failure.message
-              : null;
-        });
-      }
-    } on AppFailure catch (failure) {
-      if (mounted) setState(() => _error = failure.message);
-    } finally {
-      if (mounted) setState(() => _saving = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final parentCategories = widget.categories;
-    return AlertDialog(
-      title: const Text('Create category'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _name,
-              enabled: !_saving,
-              autofocus: true,
-              maxLength: 64,
-              textInputAction: TextInputAction.next,
-              onChanged: (_) {
-                if (_fieldErrors.containsKey('name')) {
-                  setState(() {
-                    _fieldErrors = Map.of(_fieldErrors)..remove('name');
-                  });
-                }
-              },
-              decoration: InputDecoration(
-                labelText: 'Name',
-                errorText: _fieldError('name'),
-              ),
-            ),
-            TextField(
-              controller: _description,
-              enabled: !_saving,
-              maxLength: 256,
-              minLines: 2,
-              maxLines: 3,
-              decoration: InputDecoration(
-                labelText: 'Description',
-                errorText: _fieldError('description'),
-              ),
-            ),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<int>(
-              initialValue: _parentId,
-              isExpanded: true,
-              decoration: InputDecoration(
-                labelText: 'Parent category',
-                errorText: _fieldError('parent'),
-              ),
-              hint: const Text('No parent'),
-              items: [
-                const DropdownMenuItem(value: -1, child: Text('No parent')),
-                for (final category in parentCategories)
-                  DropdownMenuItem(
-                    value: category.id,
-                    child: Text(category.name, overflow: TextOverflow.ellipsis),
-                  ),
-              ],
-              onChanged: _saving
-                  ? null
-                  : (value) => setState(() {
-                      _parentId = value == -1 ? null : value;
-                      _fieldErrors = Map.of(_fieldErrors)..remove('parent');
-                    }),
-            ),
-            if (_error != null) ...[
-              const SizedBox(height: 12),
-              Text(
-                _error!,
-                style: const TextStyle(fontSize: 12.5, color: AppColors.error),
-              ),
-            ],
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _saving ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
-        ),
-        TextButton(
-          onPressed: _saving ? null : () => unawaited(_save()),
-          child: Text(_saving ? 'Creating…' : 'Create'),
-        ),
-      ],
     );
   }
 }

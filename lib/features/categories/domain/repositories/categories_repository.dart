@@ -7,5 +7,6 @@ abstract interface class CategoriesRepository {
     required String name,
     String? description,
     int? parentId,
+    String? emoji,
   });
 }

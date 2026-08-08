@@ -24,10 +24,16 @@ class CategoriesNotifier extends AsyncNotifier<List<Category>> {
     required String name,
     String? description,
     int? parentId,
+    String? emoji,
   }) async {
     final created = await ref
         .read(categoriesRepositoryProvider)
-        .create(name: name, description: description, parentId: parentId);
+        .create(
+          name: name,
+          description: description,
+          parentId: parentId,
+          emoji: emoji,
+        );
     state = AsyncData([...?state.value, created]);
     return created;
   }

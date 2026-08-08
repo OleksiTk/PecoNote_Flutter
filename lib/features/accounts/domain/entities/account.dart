@@ -7,6 +7,7 @@ class Account {
     required this.currencyId,
     required this.sync,
     this.description,
+    this.balance = 0,
   });
 
   final String id;
@@ -14,4 +15,8 @@ class Account {
   final String? description;
   final int currencyId;
   final SyncMetadata sync;
+
+  /// Current balance, computed server-side from the account's transaction
+  /// history (see accounts.AccountSerializer.get_balance on the backend).
+  final double balance;
 }

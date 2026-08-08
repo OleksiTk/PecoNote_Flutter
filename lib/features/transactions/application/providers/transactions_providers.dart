@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/api_client.dart';
+import '../../../accounts/application/providers/accounts_providers.dart';
 import '../../data/remote/transactions_remote_data_source.dart';
 import '../../data/repositories/api_transactions_repository.dart';
 import '../../domain/entities/transaction.dart';
@@ -48,6 +49,9 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
           tagIds: tagIds,
         );
     state = AsyncData([created, ...?state.value]);
+    // The backend recalculates account balances as a side effect of saving
+    // a transaction; refresh accounts so the new balance shows up.
+    ref.invalidate(accountsProvider);
   }
 
   Future<void> updateTransactionTags({
@@ -70,6 +74,7 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
           .where((transaction) => transaction.id != id)
           .toList(),
     );
+    ref.invalidate(accountsProvider);
   }
 }
 

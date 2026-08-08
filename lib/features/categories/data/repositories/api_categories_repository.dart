@@ -25,12 +25,14 @@ class ApiCategoriesRepository implements CategoriesRepository {
     required String name,
     String? description,
     int? parentId,
+    String? emoji,
   }) async {
     try {
       final json = await _remoteDataSource.create(
         name: name,
         description: description,
         parentId: parentId,
+        emoji: emoji,
       );
       return _fromJson(json);
     } on DioException catch (error) {
@@ -45,6 +47,7 @@ class ApiCategoriesRepository implements CategoriesRepository {
       description: json['description'] as String?,
       isPublic: json['is_public'] as bool? ?? false,
       parentId: json['parent'] as int?,
+      emoji: json['icon'] as String?,
     );
   }
 

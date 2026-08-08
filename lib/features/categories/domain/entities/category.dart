@@ -5,6 +5,7 @@ class Category {
     required this.isPublic,
     this.description,
     this.parentId,
+    this.emoji,
   });
 
   final int id;
@@ -12,4 +13,5 @@ class Category {
   final String? description;
   final bool isPublic;
   final int? parentId;
+  final String? emoji;
 }

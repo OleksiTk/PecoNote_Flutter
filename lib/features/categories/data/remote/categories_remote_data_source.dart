@@ -14,6 +14,7 @@ class CategoriesRemoteDataSource {
     required String name,
     String? description,
     int? parentId,
+    String? emoji,
   }) async {
     final response = await _dio.post<Map<String, dynamic>>(
       '/tags/',
@@ -22,6 +23,7 @@ class CategoriesRemoteDataSource {
         'description': description,
         'is_public': false,
         'parent': parentId,
+        'icon': ?emoji,
       },
     );
     return response.data ?? const {};

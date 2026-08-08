@@ -519,31 +519,37 @@ class _BalanceCard extends StatelessWidget {
             ],
           ),
           const Spacer(),
-          // Бекенд поки не має ендпоінта балансу по рахунку (лише зведений
-          // /balances/ звіт) — показуємо чесний нуль, а не вигадане число.
-          RichText(
-            text: const TextSpan(
-              children: [
-                TextSpan(
-                  text: '₴ 0',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textDark,
-                    height: 1,
-                  ),
+          Builder(
+            builder: (context) {
+              final formatted = formatCurrencyAmount(account.balance);
+              final dotIndex = formatted.indexOf('.');
+              final whole = formatted.substring(0, dotIndex);
+              final cents = formatted.substring(dotIndex);
+              return RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '₴ $whole',
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textDark,
+                        height: 1,
+                      ),
+                    ),
+                    TextSpan(
+                      text: cents,
+                      style: const TextStyle(
+                        fontSize: 19,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.balanceCentsText,
+                        height: 1,
+                      ),
+                    ),
+                  ],
                 ),
-                TextSpan(
-                  text: '.00',
-                  style: TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.balanceCentsText,
-                    height: 1,
-                  ),
-                ),
-              ],
-            ),
+              );
+            },
           ),
           const SizedBox(height: 6),
           const Text(

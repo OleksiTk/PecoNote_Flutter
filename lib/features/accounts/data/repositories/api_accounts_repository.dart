@@ -79,6 +79,7 @@ class ApiAccountsRepository implements AccountsRepository {
       name: json['name'] as String? ?? '',
       description: json['description'] as String?,
       currencyId: json['currency'] as int,
+      balance: (json['balance'] as num?)?.toDouble() ?? 0,
       sync: SyncMetadata(
         localId: id,
         serverId: id,
