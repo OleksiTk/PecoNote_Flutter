@@ -13,6 +13,10 @@ import '../../../../shared/widgets/gradient_background.dart';
 import '../../../../shared/widgets/labeled_field.dart';
 import '../../../accounts/application/providers/accounts_providers.dart';
 import '../../../accounts/domain/entities/account.dart';
+import '../../../categories/application/providers/categories_providers.dart';
+import '../../../categories/domain/entities/category.dart';
+import '../../../categories/presentation/screens/categories_page.dart'
+    show categoryEmoji;
 import '../../../transactions/application/providers/transactions_providers.dart';
 import '../../../transactions/domain/entities/transaction.dart';
 import '../../../transactions/presentation/models/transaction_draft.dart'
@@ -786,7 +790,7 @@ class _AddButton extends StatelessWidget {
   }
 }
 
-class _TransactionsSheet extends StatelessWidget {
+class _TransactionsSheet extends StatefulWidget {
   const _TransactionsSheet({
     required this.hasAccounts,
     required this.transactionsAsync,
@@ -802,7 +806,42 @@ class _TransactionsSheet extends StatelessWidget {
   final Future<void> Function(Transaction transaction) onDelete;
 
   @override
+  State<_TransactionsSheet> createState() => _TransactionsSheetState();
+}
+
+class _TransactionsSheetState extends State<_TransactionsSheet> {
+  final _searchController = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  static String _titleOf(Transaction data) {
+    if (data.description?.isNotEmpty == true) return data.description!;
+    return switch (data.type) {
+      TransactionType.income => 'Income',
+      TransactionType.expense => 'Expense',
+      TransactionType.transfer => 'Transfer',
+    };
+  }
+
+  List<Transaction> _filter(List<Transaction> transactions) {
+    final query = _query.trim().toLowerCase();
+    if (query.isEmpty) return transactions;
+    return transactions
+        .where((t) => _titleOf(t).toLowerCase().contains(query))
+        .toList();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final hasAccounts = widget.hasAccounts;
+    final transactionsAsync = widget.transactionsAsync;
+    final onRetry = widget.onRetry;
+    final onDelete = widget.onDelete;
     return _GlassSheet(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -821,12 +860,17 @@ class _TransactionsSheet extends StatelessWidget {
                 ),
                 const Spacer(),
                 if (hasAccounts)
-                  const Text(
-                    'See all',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.accentBlueMuted,
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () =>
+                        context.pushNamed(AppRoute.operations.name),
+                    child: const Text(
+                      'See all',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.accentBlueMuted,
+                      ),
                     ),
                   ),
               ],
@@ -849,46 +893,70 @@ class _TransactionsSheet extends StatelessWidget {
           else
             Expanded(
               child: transactionsAsync.when(
-                data: (transactions) => transactions.isEmpty
-                    ? const Padding(
-                        padding: EdgeInsets.fromLTRB(32, 0, 32, 110),
-                        child: Center(
-                          child: Text(
-                            'No transactions yet. Tap the + button to add one.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 13.5,
-                              color: AppColors.grayText,
-                            ),
+                data: (transactions) {
+                  if (transactions.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.fromLTRB(32, 0, 32, 110),
+                      child: Center(
+                        child: Text(
+                          'No transactions yet. Tap the + button to add one.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            color: AppColors.grayText,
                           ),
                         ),
-                      )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.fromLTRB(18, 0, 18, 6),
-                            child: _SearchField(),
-                          ),
-                          Expanded(
-                            child: ListView.separated(
-                              padding: const EdgeInsets.fromLTRB(
-                                18,
-                                6,
-                                18,
-                                110,
-                              ),
-                              itemCount: transactions.length,
-                              separatorBuilder: (_, _) =>
-                                  const SizedBox(height: 2),
-                              itemBuilder: (context, index) => _TransactionTile(
-                                data: transactions[index],
-                                onDelete: () => onDelete(transactions[index]),
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
+                    );
+                  }
+                  final filtered = _filter(transactions);
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(18, 0, 18, 6),
+                        child: _SearchField(
+                          controller: _searchController,
+                          onChanged: (value) =>
+                              setState(() => _query = value),
+                        ),
+                      ),
+                      Expanded(
+                        child: filtered.isEmpty
+                            ? const Padding(
+                                padding: EdgeInsets.fromLTRB(32, 24, 32, 110),
+                                child: Center(
+                                  child: Text(
+                                    'No transactions match your search.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 13.5,
+                                      color: AppColors.grayText,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : ListView.separated(
+                                padding: const EdgeInsets.fromLTRB(
+                                  18,
+                                  6,
+                                  18,
+                                  110,
+                                ),
+                                itemCount: filtered.length,
+                                separatorBuilder: (_, _) =>
+                                    const SizedBox(height: 2),
+                                itemBuilder: (context, index) =>
+                                    _TransactionTile(
+                                      data: filtered[index],
+                                      onDelete: () =>
+                                          onDelete(filtered[index]),
+                                    ),
+                              ),
+                      ),
+                    ],
+                  );
+                },
                 loading: () => const Center(
                   child: CircularProgressIndicator(
                     strokeWidth: 2.4,
@@ -1242,7 +1310,10 @@ class _EditCardSheetState extends State<_EditCardSheet> {
 }
 
 class _SearchField extends StatelessWidget {
-  const _SearchField();
+  const _SearchField({required this.controller, required this.onChanged});
+
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -1254,13 +1325,15 @@ class _SearchField extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.white.withValues(alpha: 0.75)),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.search, size: 20, color: AppColors.placeholderGray),
-          SizedBox(width: 8),
+          const Icon(Icons.search, size: 20, color: AppColors.placeholderGray),
+          const SizedBox(width: 8),
           Expanded(
             child: TextField(
-              decoration: InputDecoration(
+              controller: controller,
+              onChanged: onChanged,
+              decoration: const InputDecoration(
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
                 border: InputBorder.none,
@@ -1270,7 +1343,7 @@ class _SearchField extends StatelessWidget {
                   fontSize: 14,
                 ),
               ),
-              style: TextStyle(color: AppColors.textDark, fontSize: 14),
+              style: const TextStyle(color: AppColors.textDark, fontSize: 14),
             ),
           ),
         ],
@@ -1279,7 +1352,7 @@ class _SearchField extends StatelessWidget {
   }
 }
 
-class _TransactionTile extends StatelessWidget {
+class _TransactionTile extends ConsumerWidget {
   const _TransactionTile({required this.data, required this.onDelete});
 
   final Transaction data;
@@ -1327,7 +1400,7 @@ class _TransactionTile extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isIncome = data.type == TransactionType.income;
     final title = data.description?.isNotEmpty == true
         ? data.description!
@@ -1342,7 +1415,24 @@ class _TransactionTile extends StatelessWidget {
       TransactionType.transfer => '',
     };
 
+    final categories = ref.watch(categoriesProvider).value;
+    Category? category;
+    if (categories != null && data.tagIds.isNotEmpty) {
+      for (final tagId in data.tagIds) {
+        final match = categories.where((c) => c.id == tagId).firstOrNull;
+        if (match != null) {
+          category = match;
+          break;
+        }
+      }
+    }
+    final icon = category != null
+        ? categoryEmoji(category)
+        : _emojiByType[data.type] ?? '🧾';
+
     return GestureDetector(
+      onTap: () =>
+          context.pushNamed(AppRoute.transactionView.name, extra: data),
       onLongPress: () => _confirmDelete(context),
       behavior: HitTestBehavior.opaque,
       child: Padding(
@@ -1360,10 +1450,7 @@ class _TransactionTile extends StatelessWidget {
                   color: AppColors.white.withValues(alpha: 0.9),
                 ),
               ),
-              child: Text(
-                _emojiByType[data.type] ?? '🧾',
-                style: const TextStyle(fontSize: 20),
-              ),
+              child: Text(icon, style: const TextStyle(fontSize: 20)),
             ),
             const SizedBox(width: 14),
             Expanded(

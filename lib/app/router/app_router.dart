@@ -23,9 +23,11 @@ import '../../features/startup/presentation/screens/monobank_sort_screen.dart';
 import '../../features/startup/presentation/screens/monobank_syncing_screen.dart';
 import '../../features/startup/presentation/screens/start_choice_screen.dart';
 import '../../features/startup/presentation/screens/splash_screen.dart';
+import '../../features/transactions/domain/entities/transaction.dart';
 import '../../features/transactions/presentation/models/transaction_draft.dart';
 import '../../features/transactions/presentation/screens/new_transaction_screen.dart';
 import '../../features/transactions/presentation/screens/transaction_details_screen.dart';
+import '../../features/transactions/presentation/screens/transaction_view_screen.dart';
 import 'app_routes.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -191,6 +193,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 accountLabel: 'Mono Black •4421',
               ),
         ),
+      ),
+      GoRoute(
+        path: AppRoute.transactionView.path,
+        name: AppRoute.transactionView.name,
+        builder: (context, state) =>
+            TransactionViewScreen(transaction: state.extra! as Transaction),
       ),
       GoRoute(
         path: AppRoute.operations.path,

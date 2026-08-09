@@ -1,17 +1,83 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
+import '../../../../app/router/app_routes.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../shared/widgets/app_bottom_nav_bar.dart';
 import '../../../../shared/widgets/gradient_background.dart';
+import '../../../categories/application/providers/categories_providers.dart';
+import '../../../categories/domain/entities/category.dart';
+import '../../../categories/presentation/screens/categories_page.dart'
+    show categoryEmoji;
+import '../../../transactions/application/providers/transactions_providers.dart';
+import '../../../transactions/domain/entities/transaction.dart';
+import '../../../transactions/presentation/models/transaction_draft.dart'
+    show formatCurrencyAmount;
+import '../models/operations_filters.dart';
+import '../widgets/category_filter_sheet.dart';
+import '../widgets/date_filter_sheet.dart';
 
 /// Екран операцій PecoNote: список транзакцій, згрупованих по днях,
-/// з пошуком і фільтрами. Поки що статичний макет на mock-даних.
-class OperationsScreen extends StatelessWidget {
+/// з пошуком за назвою. Дані підʼєднані до [transactionsProvider].
+class OperationsScreen extends ConsumerStatefulWidget {
   const OperationsScreen({super.key});
 
   @override
+  ConsumerState<OperationsScreen> createState() => _OperationsScreenState();
+}
+
+class _OperationsScreenState extends ConsumerState<OperationsScreen> {
+  final _searchController = TextEditingController();
+  String _query = '';
+  Set<int> _selectedCategoryIds = {};
+  DateFilter _dateFilter = const DateFilter();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  int get _activeFilterCount =>
+      _selectedCategoryIds.length + (_dateFilter.isAllTime ? 0 : 1);
+
+  Future<void> _openCategoryFilter() async {
+    final categories = ref.read(categoriesProvider).value ?? const [];
+    final result = await showCategoryFilterSheet(
+      context,
+      categories: categories,
+      selected: _selectedCategoryIds,
+    );
+    if (result != null) setState(() => _selectedCategoryIds = result);
+  }
+
+  Future<void> _openDateFilter() async {
+    final result = await showDateFilterSheet(context, initial: _dateFilter);
+    if (result != null) setState(() => _dateFilter = result);
+  }
+
+  void _removeCategory(int id) {
+    setState(() => _selectedCategoryIds = {..._selectedCategoryIds}..remove(id));
+  }
+
+  void _clearDateFilter() {
+    setState(() => _dateFilter = const DateFilter());
+  }
+
+  void _clearAllFilters() {
+    setState(() {
+      _selectedCategoryIds = {};
+      _dateFilter = const DateFilter();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const GradientBackground(
+    final categories = ref.watch(categoriesProvider).value ?? const [];
+
+    return GradientBackground(
       child: Stack(
         children: [
           SafeArea(
@@ -19,31 +85,52 @@ class OperationsScreen extends StatelessWidget {
             child: Column(
               children: [
                 Padding(
-                  padding: EdgeInsets.fromLTRB(22, 18, 22, 0),
-                  child: _OperationsHeader(),
+                  padding: const EdgeInsets.fromLTRB(22, 18, 22, 0),
+                  child: _OperationsHeader(
+                    label: _dateFilter.label(),
+                    onTap: _openDateFilter,
+                  ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20),
-                  child: _SearchRow(),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: _SearchRow(
+                    controller: _searchController,
+                    onChanged: (value) => setState(() => _query = value),
+                    filterCount: _activeFilterCount,
+                    onFilterTap: _openCategoryFilter,
+                  ),
                 ),
-                SizedBox(height: 12),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20),
-                  child: _FilterChipsRow(),
-                ),
-                SizedBox(height: 14),
+                if (_activeFilterCount > 0) ...[
+                  const SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: _FilterChipsRow(
+                      categories: categories,
+                      selectedCategoryIds: _selectedCategoryIds,
+                      dateFilter: _dateFilter,
+                      onRemoveCategory: _removeCategory,
+                      onRemoveDate: _clearDateFilter,
+                      onClearAll: _clearAllFilters,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 14),
                 Expanded(
                   child: Padding(
-                    padding: EdgeInsets.fromLTRB(14, 0, 14, 0),
-                    child: _OperationsSheet(),
+                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 0),
+                    child: _OperationsSheet(
+                      query: _query,
+                      selectedCategoryIds: _selectedCategoryIds,
+                      dateRange: _dateFilter.resolve(),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
 
-          Positioned(
+          const Positioned(
             left: 0,
             right: 0,
             bottom: -10,
@@ -59,13 +146,16 @@ class OperationsScreen extends StatelessWidget {
 }
 
 class _OperationsHeader extends StatelessWidget {
-  const _OperationsHeader();
+  const _OperationsHeader({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       children: [
-        Text(
+        const Text(
           'Operations',
           style: TextStyle(
             fontSize: 26,
@@ -73,23 +163,27 @@ class _OperationsHeader extends StatelessWidget {
             color: AppColors.textDark,
           ),
         ),
-        Spacer(),
-        Row(
-          children: [
-            Text(
-              'June 2026',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
+        const Spacer(),
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Row(
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.accentBlue,
+                ),
+              ),
+              const Icon(
+                Icons.keyboard_arrow_down_rounded,
+                size: 20,
                 color: AppColors.accentBlue,
               ),
-            ),
-            Icon(
-              Icons.keyboard_arrow_down_rounded,
-              size: 20,
-              color: AppColors.accentBlue,
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
@@ -97,11 +191,21 @@ class _OperationsHeader extends StatelessWidget {
 }
 
 class _SearchRow extends StatelessWidget {
-  const _SearchRow();
+  const _SearchRow({
+    required this.controller,
+    required this.onChanged,
+    required this.filterCount,
+    required this.onFilterTap,
+  });
+
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+  final int filterCount;
+  final VoidCallback onFilterTap;
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       children: [
         Expanded(
           child: _GlassField(
@@ -109,81 +213,139 @@ class _SearchRow extends StatelessWidget {
             borderRadius: 18,
             child: Row(
               children: [
-                SizedBox(width: 14),
-                Icon(Icons.search, size: 20, color: AppColors.placeholderGray),
-                SizedBox(width: 8),
+                const SizedBox(width: 14),
+                const Icon(
+                  Icons.search,
+                  size: 20,
+                  color: AppColors.placeholderGray,
+                ),
+                const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
-                    decoration: InputDecoration(
+                    controller: controller,
+                    onChanged: onChanged,
+                    decoration: const InputDecoration(
                       isDense: true,
                       contentPadding: EdgeInsets.zero,
                       border: InputBorder.none,
-                      hintText: 'Search merchant, note…',
+                      hintText: 'Search transactions…',
                       hintStyle: TextStyle(
                         color: AppColors.placeholderGray,
                         fontSize: 14,
                       ),
                     ),
-                    style: TextStyle(color: AppColors.textDark, fontSize: 14),
+                    style: const TextStyle(
+                      color: AppColors.textDark,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
-                SizedBox(width: 14),
+                const SizedBox(width: 14),
               ],
             ),
           ),
         ),
-        SizedBox(width: 10),
-        _FilterButton(count: 2),
+        const SizedBox(width: 10),
+        _FilterButton(count: filterCount, onTap: onFilterTap),
       ],
     );
   }
 }
 
 class _FilterButton extends StatelessWidget {
-  const _FilterButton({required this.count});
+  const _FilterButton({required this.count, required this.onTap});
 
   final int count;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 50,
-      height: 50,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          const _GlassField(
-            height: 50,
-            borderRadius: 18,
-            child: Center(
-              child: Icon(
-                Icons.tune_rounded,
-                size: 20,
-                color: AppColors.textDark,
-              ),
-            ),
-          ),
-          Positioned(
-            right: -4,
-            top: -4,
-            child: Container(
-              width: 20,
-              height: 20,
-              alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: AppColors.accentBlue,
-                shape: BoxShape.circle,
-              ),
-              child: Text(
-                '$count',
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.white,
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: 50,
+        height: 50,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            const _GlassField(
+              height: 50,
+              borderRadius: 18,
+              child: Center(
+                child: Icon(
+                  Icons.tune_rounded,
+                  size: 20,
+                  color: AppColors.textDark,
                 ),
               ),
             ),
-          ),
+            if (count > 0)
+              Positioned(
+                right: -4,
+                top: -4,
+                child: Container(
+                  width: 20,
+                  height: 20,
+                  alignment: Alignment.center,
+                  decoration: const BoxDecoration(
+                    color: AppColors.accentBlue,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    '$count',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.white,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterChipsRow extends StatelessWidget {
+  const _FilterChipsRow({
+    required this.categories,
+    required this.selectedCategoryIds,
+    required this.dateFilter,
+    required this.onRemoveCategory,
+    required this.onRemoveDate,
+    required this.onClearAll,
+  });
+
+  final List<Category> categories;
+  final Set<int> selectedCategoryIds;
+  final DateFilter dateFilter;
+  final ValueChanged<int> onRemoveCategory;
+  final VoidCallback onRemoveDate;
+  final VoidCallback onClearAll;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (final category in categories)
+            if (selectedCategoryIds.contains(category.id)) ...[
+              _FilterChip(
+                emoji: categoryEmoji(category),
+                label: category.name,
+                onRemove: () => onRemoveCategory(category.id),
+              ),
+              const SizedBox(width: 8),
+            ],
+          if (!dateFilter.isAllTime) ...[
+            _FilterChip(label: dateFilter.label(), onRemove: onRemoveDate),
+            const SizedBox(width: 8),
+          ],
+          _ClearAllChip(onTap: onClearAll),
         ],
       ),
     );
@@ -205,8 +367,8 @@ class _GlassField extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
-      // Плоский колір замість BackdropFilter: пошук і фільтр показані
-      // одночасно поверх постійно анімованого фону.
+      // Плоский колір замість BackdropFilter: пошук показаний одночасно
+      // поверх постійно анімованого фону.
       child: Container(
         height: height,
         decoration: BoxDecoration(
@@ -220,37 +382,17 @@ class _GlassField extends StatelessWidget {
   }
 }
 
-class _FilterChipsRow extends StatelessWidget {
-  const _FilterChipsRow();
-
-  @override
-  Widget build(BuildContext context) {
-    return const SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          _FilterChip(emoji: '🌮', label: 'Food'),
-          SizedBox(width: 8),
-          _FilterChip(dotColor: Colors.black, label: 'Black •4421'),
-          SizedBox(width: 8),
-          _ClearAllChip(),
-        ],
-      ),
-    );
-  }
-}
-
 class _FilterChip extends StatelessWidget {
-  const _FilterChip({this.emoji, this.dotColor, required this.label});
+  const _FilterChip({this.emoji, required this.label, required this.onRemove});
 
   final String? emoji;
-  final Color? dotColor;
   final String label;
+  final VoidCallback onRemove;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
+      padding: const EdgeInsets.fromLTRB(10, 7, 8, 7),
       decoration: BoxDecoration(
         color: AppColors.white.withValues(alpha: 0.75),
         borderRadius: BorderRadius.circular(99),
@@ -263,17 +405,6 @@ class _FilterChip extends StatelessWidget {
             Text(emoji!, style: const TextStyle(fontSize: 13)),
             const SizedBox(width: 6),
           ],
-          if (dotColor != null) ...[
-            Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                color: dotColor,
-                shape: BoxShape.circle,
-              ),
-            ),
-            const SizedBox(width: 6),
-          ],
           Text(
             label,
             style: const TextStyle(
@@ -283,7 +414,11 @@ class _FilterChip extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
-          const Icon(Icons.close, size: 15, color: AppColors.grayText),
+          GestureDetector(
+            onTap: onRemove,
+            behavior: HitTestBehavior.opaque,
+            child: const Icon(Icons.close, size: 15, color: AppColors.grayText),
+          ),
         ],
       ),
     );
@@ -291,74 +426,70 @@ class _FilterChip extends StatelessWidget {
 }
 
 class _ClearAllChip extends StatelessWidget {
-  const _ClearAllChip();
+  const _ClearAllChip({required this.onTap});
+
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      child: const Text(
-        'Clear all',
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          color: AppColors.grayText,
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        child: const Text(
+          'Clear all',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppColors.grayText,
+          ),
         ),
       ),
     );
   }
 }
 
-class _OperationsSheet extends StatelessWidget {
-  const _OperationsSheet();
+class _OperationsSheet extends ConsumerWidget {
+  const _OperationsSheet({
+    required this.query,
+    required this.selectedCategoryIds,
+    required this.dateRange,
+  });
 
-  static const List<_DaySection> _days = [
-    _DaySection(
-      label: 'TODAY · 11 JUL',
-      total: '−₴ 828',
-      transactions: [
-        _TransactionData(
-          emoji: '🛒',
-          title: 'Silpo',
-          subtitle: 'Food · 18:24',
-          amount: '−₴ 642.18',
-        ),
-        _TransactionData(
-          emoji: '🥐',
-          title: 'Lviv Croissants',
-          subtitle: 'Food · 13:02',
-          amount: '−₴ 186.00',
-        ),
-      ],
-    ),
-    _DaySection(
-      label: 'YESTERDAY · 10 JUL',
-      total: '−₴ 1034',
-      transactions: [
-        _TransactionData(
-          emoji: '🛒',
-          title: 'Silpo',
-          subtitle: 'Food · 18:47',
-          amount: '−₴ 486.00',
-        ),
-        _TransactionData(
-          emoji: '🍎',
-          title: 'ATB Market',
-          subtitle: 'Food · 12:15',
-          amount: '−₴ 312.40',
-        ),
-        _TransactionData(
-          emoji: '🥤',
-          title: 'Silpo',
-          subtitle: 'Food · 09:31',
-          amount: '−₴ 235.60',
-        ),
-      ],
-    ),
-  ];
+  final String query;
+  final Set<int> selectedCategoryIds;
+  final DateTimeRange? dateRange;
+
+  static String _titleOf(Transaction data) {
+    if (data.description?.isNotEmpty == true) return data.description!;
+    return switch (data.type) {
+      TransactionType.income => 'Income',
+      TransactionType.expense => 'Expense',
+      TransactionType.transfer => 'Transfer',
+    };
+  }
+
+  static String _dayKey(DateTime local) =>
+      '${local.year}-${local.month}-${local.day}';
+
+  static String _dayLabel(DateTime local) {
+    final now = DateTime.now();
+    bool isSameDay(DateTime a, DateTime b) =>
+        a.year == b.year && a.month == b.month && a.day == b.day;
+    final date = DateFormat('d MMM').format(local).toUpperCase();
+    if (isSameDay(local, now)) return 'TODAY · $date';
+    if (isSameDay(local, now.subtract(const Duration(days: 1)))) {
+      return 'YESTERDAY · $date';
+    }
+    return date;
+  }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final transactionsAsync = ref.watch(transactionsProvider);
+    final categories = ref.watch(categoriesProvider).value;
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -381,28 +512,139 @@ class _OperationsSheet extends StatelessWidget {
             borderRadius: BorderRadius.circular(28),
             border: Border.all(color: AppColors.white.withValues(alpha: 0.7)),
           ),
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(18, 18, 18, 110),
-            children: [
-              for (final day in _days) ...[
-                _DayHeaderRow(day: day),
-                const SizedBox(height: 4),
-                for (final tx in day.transactions) _TransactionTile(data: tx),
-                const SizedBox(height: 14),
-              ],
-              const Center(child: _LoadEarlierLink()),
-            ],
+          child: transactionsAsync.when(
+            data: (transactions) {
+              if (transactions.isEmpty) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 32),
+                    child: Text(
+                      'No transactions yet.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 13.5, color: AppColors.grayText),
+                    ),
+                  ),
+                );
+              }
+
+              final trimmedQuery = query.trim().toLowerCase();
+              final filtered = transactions.where((t) {
+                if (trimmedQuery.isNotEmpty &&
+                    !_titleOf(t).toLowerCase().contains(trimmedQuery)) {
+                  return false;
+                }
+                if (selectedCategoryIds.isNotEmpty &&
+                    !t.tagIds.any(selectedCategoryIds.contains)) {
+                  return false;
+                }
+                if (dateRange != null) {
+                  final local = t.occurredAt.toLocal();
+                  if (local.isBefore(dateRange!.start) ||
+                      local.isAfter(dateRange!.end)) {
+                    return false;
+                  }
+                }
+                return true;
+              }).toList();
+
+              if (filtered.isEmpty) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 32),
+                    child: Text(
+                      'No transactions match your filters.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 13.5, color: AppColors.grayText),
+                    ),
+                  ),
+                );
+              }
+
+              final sorted = [...filtered]
+                ..sort((a, b) => b.occurredAt.compareTo(a.occurredAt));
+
+              final orderedKeys = <String>[];
+              final groups = <String, List<Transaction>>{};
+              for (final tx in sorted) {
+                final local = tx.occurredAt.toLocal();
+                final key = _dayKey(local);
+                if (!groups.containsKey(key)) {
+                  orderedKeys.add(key);
+                  groups[key] = [];
+                }
+                groups[key]!.add(tx);
+              }
+
+              return ListView(
+                padding: const EdgeInsets.fromLTRB(18, 18, 18, 110),
+                children: [
+                  for (final key in orderedKeys) ...[
+                    _DayHeaderRow(
+                      label: _dayLabel(groups[key]!.first.occurredAt.toLocal()),
+                      total: _dayTotal(groups[key]!),
+                    ),
+                    const SizedBox(height: 4),
+                    for (final tx in groups[key]!)
+                      _TransactionTile(data: tx, category: _categoryFor(tx, categories)),
+                    const SizedBox(height: 14),
+                  ],
+                ],
+              );
+            },
+            loading: () => const Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2.4,
+                color: AppColors.accentBlue,
+              ),
+            ),
+            error: (error, _) => Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Text(
+                  'Failed to load transactions.\n$error',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 13.5, color: AppColors.grayText),
+                ),
+              ),
+            ),
           ),
         ),
       ),
     );
   }
+
+  static Category? _categoryFor(Transaction tx, List<Category>? categories) {
+    if (categories == null || tx.tagIds.isEmpty) return null;
+    for (final tagId in tx.tagIds) {
+      for (final category in categories) {
+        if (category.id == tagId) return category;
+      }
+    }
+    return null;
+  }
+
+  static String _dayTotal(List<Transaction> transactions) {
+    var total = 0.0;
+    for (final tx in transactions) {
+      switch (tx.type) {
+        case TransactionType.income:
+          total += tx.total;
+        case TransactionType.expense:
+          total -= tx.total;
+        case TransactionType.transfer:
+          break;
+      }
+    }
+    final sign = total < 0 ? '−' : (total > 0 ? '+' : '');
+    return '$sign₴ ${formatCurrencyAmount(total.abs())}';
+  }
 }
 
 class _DayHeaderRow extends StatelessWidget {
-  const _DayHeaderRow({required this.day});
+  const _DayHeaderRow({required this.label, required this.total});
 
-  final _DaySection day;
+  final String label;
+  final String total;
 
   @override
   Widget build(BuildContext context) {
@@ -411,7 +653,7 @@ class _DayHeaderRow extends StatelessWidget {
       child: Row(
         children: [
           Text(
-            day.label,
+            label,
             style: const TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
@@ -421,7 +663,7 @@ class _DayHeaderRow extends StatelessWidget {
           ),
           const Spacer(),
           Text(
-            day.total,
+            total,
             style: const TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
@@ -434,106 +676,99 @@ class _DayHeaderRow extends StatelessWidget {
   }
 }
 
-class _LoadEarlierLink extends StatelessWidget {
-  const _LoadEarlierLink();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 10),
-      child: Text(
-        'Load earlier days',
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-          color: AppColors.accentBlue,
-        ),
-      ),
-    );
-  }
-}
-
-class _DaySection {
-  const _DaySection({
-    required this.label,
-    required this.total,
-    required this.transactions,
-  });
-
-  final String label;
-  final String total;
-  final List<_TransactionData> transactions;
-}
-
-class _TransactionData {
-  const _TransactionData({
-    required this.emoji,
-    required this.title,
-    required this.subtitle,
-    required this.amount,
-  });
-
-  final String emoji;
-  final String title;
-  final String subtitle;
-  final String amount;
-}
-
 class _TransactionTile extends StatelessWidget {
-  const _TransactionTile({required this.data});
+  const _TransactionTile({required this.data, required this.category});
 
-  final _TransactionData data;
+  final Transaction data;
+  final Category? category;
+
+  static const _emojiByType = {
+    TransactionType.income: '💼',
+    TransactionType.expense: '🧾',
+    TransactionType.transfer: '🔁',
+  };
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 9),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: AppColors.white.withValues(alpha: 0.8),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.white.withValues(alpha: 0.9)),
-            ),
-            child: Text(data.emoji, style: const TextStyle(fontSize: 20)),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  data.title,
-                  style: const TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textDark,
-                  ),
+    final isIncome = data.type == TransactionType.income;
+    final title = data.description?.isNotEmpty == true
+        ? data.description!
+        : switch (data.type) {
+            TransactionType.income => 'Income',
+            TransactionType.expense => 'Expense',
+            TransactionType.transfer => 'Transfer',
+          };
+    final sign = switch (data.type) {
+      TransactionType.expense => '−',
+      TransactionType.income => '+',
+      TransactionType.transfer => '',
+    };
+    final icon = category != null
+        ? categoryEmoji(category!)
+        : _emojiByType[data.type] ?? '🧾';
+    final subtitle =
+        '${category?.name ?? title} · '
+        '${DateFormat('HH:mm').format(data.occurredAt.toLocal())}';
+
+    return GestureDetector(
+      onTap: () =>
+          context.pushNamed(AppRoute.transactionView.name, extra: data),
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 9),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: AppColors.white.withValues(alpha: 0.8),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: AppColors.white.withValues(alpha: 0.9),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  data.subtitle,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.grayText,
+              ),
+              child: Text(icon, style: const TextStyle(fontSize: 20)),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textDark,
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.grayText,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          Text(
-            data.amount,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textDark,
+            Text(
+              '$sign₴ ${formatCurrencyAmount(data.total)}',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: isIncome ? AppColors.income : AppColors.textDark,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

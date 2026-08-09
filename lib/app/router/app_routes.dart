@@ -21,6 +21,7 @@ enum AppRoute {
   newAccount('/accounts/new'),
   newTransaction('/transactions/new'),
   transactionDetails('/transactions/new/details'),
+  transactionView('/transactions/view'),
   operations('/operations'),
   inbox('/inbox'),
   settings('/settings');

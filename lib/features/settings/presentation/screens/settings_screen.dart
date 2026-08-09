@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../shared/widgets/app_bottom_nav_bar.dart';
 import '../../../../shared/widgets/gradient_background.dart';
+import '../../../auth/application/providers/auth_providers.dart';
 import '../../application/providers/settings_providers.dart';
 import '../../domain/entities/currency.dart';
 import '../../domain/entities/user_profile.dart';
@@ -73,7 +74,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 22),
 
-                const _DangerSection(),
+                _DangerSection(onLogout: () => _confirmLogout(context, ref)),
               ],
             ),
           ),
@@ -90,6 +91,39 @@ class SettingsScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  static Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Log out?'),
+        content: const Text('You will need to sign in again to continue.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text(
+              'Log out',
+              style: TextStyle(color: AppColors.notificationDot),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await ref.read(authRepositoryProvider).signOut();
+    } on Object catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Could not log out: $error')));
+      }
+    }
   }
 
   static String _currencyLabel(AsyncValue<List<Currency>> currenciesAsync) {
@@ -277,6 +311,7 @@ class _SettingsRowData {
     this.trailing,
     this.destructive = false,
     this.iconWidget,
+    this.onTap,
   });
 
   final String emoji;
@@ -287,6 +322,7 @@ class _SettingsRowData {
 
   /// Якщо задано — замість емодзі малюється цей віджет (для danger-рядків).
   final Widget? iconWidget;
+  final VoidCallback? onTap;
 }
 
 /// Скляна група рядків налаштувань.
@@ -341,7 +377,7 @@ class _SettingsRow extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () {},
+        onTap: data.onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
           child: Row(
@@ -398,24 +434,27 @@ class _SettingsRow extends StatelessWidget {
 
 /// Log out + Delete account у теплому рожевому склі.
 class _DangerSection extends StatelessWidget {
-  const _DangerSection();
+  const _DangerSection({required this.onLogout});
+
+  final VoidCallback onLogout;
 
   @override
   Widget build(BuildContext context) {
-    return const _GlassSection(
-      tint: Color(0xFFFFE0DA),
+    return _GlassSection(
+      tint: const Color(0xFFFFE0DA),
       rows: [
         _SettingsRowData(
           emoji: '',
           label: 'Log out',
           destructive: true,
-          iconWidget: Icon(
+          onTap: onLogout,
+          iconWidget: const Icon(
             Icons.logout,
             size: 18,
             color: AppColors.notificationDot,
           ),
         ),
-        _SettingsRowData(
+        const _SettingsRowData(
           emoji: '',
           label: 'Delete account',
           value: 'permanent',
