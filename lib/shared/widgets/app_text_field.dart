@@ -13,6 +13,7 @@ class AppTextField extends StatefulWidget {
     this.errorText,
     this.enabled = true,
     this.textInputAction,
+    this.onSubmitted,
   });
 
   final String label;
@@ -23,6 +24,7 @@ class AppTextField extends StatefulWidget {
   final String? errorText;
   final bool enabled;
   final TextInputAction? textInputAction;
+  final ValueChanged<String>? onSubmitted;
 
   @override
   State<AppTextField> createState() => _AppTextFieldState();
@@ -86,6 +88,7 @@ class _AppTextFieldState extends State<AppTextField> {
                           obscureText: widget.obscurable && _obscured,
                           keyboardType: widget.keyboardType,
                           textInputAction: widget.textInputAction,
+                          onSubmitted: widget.onSubmitted,
                           style: const TextStyle(
                             fontSize: 15,
                             color: AppColors.textDark,

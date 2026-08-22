@@ -34,13 +34,75 @@ class ApiSettingsRepository implements SettingsRepository {
     }
   }
 
+  @override
+  Future<UserProfile> updateProfile({required String username}) async {
+    try {
+      final json = await _remoteDataSource.updateProfile(username: username);
+      return UserProfile.fromJson(json);
+    } on DioException catch (error) {
+      throw _failureFrom(error);
+    }
+  }
+
+  @override
+  Future<void> changeEmail({
+    required String email,
+    required String currentPassword,
+  }) async {
+    try {
+      await _remoteDataSource.changeEmail(
+        email: email,
+        currentPassword: currentPassword,
+      );
+    } on DioException catch (error) {
+      throw _failureFrom(error);
+    }
+  }
+
+  @override
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmNewPassword,
+  }) async {
+    try {
+      await _remoteDataSource.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+        confirmNewPassword: confirmNewPassword,
+      );
+    } on DioException catch (error) {
+      throw _failureFrom(error);
+    }
+  }
+
   AppFailure _failureFrom(DioException error) {
     final data = error.response?.data;
-    final detail = data is Map ? data['detail'] : null;
-    if (detail is String && detail.isNotEmpty) {
-      return error.response?.statusCode == 401
-          ? AuthenticationFailure(detail)
-          : NetworkFailure(detail);
+    final fieldErrors = <String, List<String>>{};
+    if (data is Map) {
+      for (final entry in data.entries) {
+        if (entry.key == 'detail') continue;
+        final value = entry.value;
+        if (value is List) {
+          fieldErrors[entry.key.toString()] = value
+              .map((message) => message.toString())
+              .toList();
+        } else if (value != null) {
+          fieldErrors[entry.key.toString()] = [value.toString()];
+        }
+      }
+      if (fieldErrors.isNotEmpty) {
+        return ValidationFailure(
+          'Please check the highlighted fields.',
+          fieldErrors,
+        );
+      }
+      final detail = data['detail'];
+      if (detail is String && detail.isNotEmpty) {
+        return error.response?.statusCode == 401
+            ? AuthenticationFailure(detail)
+            : NetworkFailure(detail);
+      }
     }
     return const NetworkFailure('Could not load settings. Please try again.');
   }

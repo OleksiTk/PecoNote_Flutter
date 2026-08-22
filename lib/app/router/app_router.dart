@@ -11,6 +11,10 @@ import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/inbox/presentation/screens/inbox_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../../features/operations/presentation/screens/operations_screen.dart';
+import '../../features/rules/domain/entities/rule.dart';
+import '../../features/rules/presentation/screens/rule_editor_screen.dart';
+import '../../features/rules/presentation/screens/rule_preview_screen.dart';
+import '../../features/rules/presentation/screens/rules_list_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/stats/presentation/screens/stats_screen.dart';
 import '../../features/startup/presentation/screens/connect_monobank_screen.dart';
@@ -214,6 +218,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoute.settings.path,
         name: AppRoute.settings.name,
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoute.rules.path,
+        name: AppRoute.rules.name,
+        builder: (context, state) => const RulesListScreen(),
+      ),
+      GoRoute(
+        path: AppRoute.ruleEditor.path,
+        name: AppRoute.ruleEditor.name,
+        builder: (context, state) =>
+            RuleEditorScreen(rule: state.extra as Rule?),
+      ),
+      GoRoute(
+        path: AppRoute.rulePreview.path,
+        name: AppRoute.rulePreview.name,
+        builder: (context, state) =>
+            RulePreviewScreen(rule: state.extra! as Rule),
       ),
     ],
   );

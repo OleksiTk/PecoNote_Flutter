@@ -24,7 +24,10 @@ enum AppRoute {
   transactionView('/transactions/view'),
   operations('/operations'),
   inbox('/inbox'),
-  settings('/settings');
+  settings('/settings'),
+  rules('/settings/rules'),
+  ruleEditor('/settings/rules/editor'),
+  rulePreview('/settings/rules/preview');
 
   const AppRoute(this.path);
 

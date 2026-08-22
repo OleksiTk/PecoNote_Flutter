@@ -1,23 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router/app_routes.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../shared/widgets/app_bottom_nav_bar.dart';
 import '../../../../shared/widgets/gradient_background.dart';
 import '../../../auth/application/providers/auth_providers.dart';
+import '../../../rules/application/providers/rules_providers.dart';
 import '../../application/providers/settings_providers.dart';
 import '../../domain/entities/currency.dart';
 import '../../domain/entities/user_profile.dart';
+import '../widgets/change_email_sheet.dart';
+import '../widgets/change_password_sheet.dart';
+import '../widgets/currency_picker_sheet.dart';
+import '../widgets/edit_profile_sheet.dart';
+import '../widgets/language_picker_sheet.dart';
 
 /// Екран налаштувань PecoNote: профіль і валюта підтягуються з
 /// GET /profile/ та GET /currencies/, решта поки що mock-дані макета.
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  // Language picker is UI-only for now — no backend endpoint to persist it
+  // yet, so the selection just lives in local state.
+  String _language = 'English';
+
+  @override
+  Widget build(BuildContext context) {
     final profileAsync = ref.watch(userProfileProvider);
     final currenciesAsync = ref.watch(userCurrenciesProvider);
+    final rulesAsync = ref.watch(rulesProvider);
 
     return GradientBackground(
       child: Stack(
@@ -32,19 +50,43 @@ class SettingsScreen extends ConsumerWidget {
                 const _StatsRow(),
                 const SizedBox(height: 26),
 
+                const _SectionLabel('ACCOUNT'),
+                const SizedBox(height: 8),
+                _AccountSection(profileAsync: profileAsync),
+                const SizedBox(height: 24),
+
                 const _SectionLabel('PREFERENCES'),
                 const SizedBox(height: 8),
                 _GlassSection(
                   rows: [
-                    const _SettingsRowData(
+                    _SettingsRowData(
                       emoji: '🌐',
                       label: 'Language',
-                      value: 'English',
+                      value: _language,
+                      onTap: () async {
+                        final selected = await showLanguagePickerSheet(
+                          context,
+                          currentLanguage: _language,
+                        );
+                        if (selected != null) {
+                          setState(() => _language = selected);
+                        }
+                      },
                     ),
                     _SettingsRowData(
                       emoji: '💱',
                       label: 'Default currency',
                       value: _currencyLabel(currenciesAsync),
+                      onTap: () {
+                        final currentCode =
+                            currenciesAsync.value?.isNotEmpty ?? false
+                            ? currenciesAsync.value!.first.code
+                            : 'UAH';
+                        showCurrencyPickerSheet(
+                          context,
+                          currentCode: currentCode,
+                        );
+                      },
                     ),
                     const _SettingsRowData(
                       emoji: '🎨',
@@ -55,6 +97,16 @@ class SettingsScreen extends ConsumerWidget {
                       emoji: '🔔',
                       label: 'Notifications',
                       trailing: _NotificationsSwitch(),
+                    ),
+                    _SettingsRowData(
+                      emoji: '🧩',
+                      label: 'Rules',
+                      value: rulesAsync.when(
+                        data: (rules) => '${rules.length}',
+                        loading: () => '…',
+                        error: (_, _) => '—',
+                      ),
+                      onTap: () => context.pushNamed(AppRoute.rules.name),
                     ),
                   ],
                 ),
@@ -93,7 +145,10 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  static Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
+  static Future<void> _confirmLogout(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -281,6 +336,58 @@ class _StatChip extends StatelessWidget {
   }
 }
 
+/// ACCOUNT-секція: Profile / Email / Password — відкриває відповідну
+/// нижню шторку і, у разі успіху, оновлює [userProfileProvider].
+class _AccountSection extends ConsumerWidget {
+  const _AccountSection({required this.profileAsync});
+
+  final AsyncValue<UserProfile> profileAsync;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profile = profileAsync.value;
+
+    return _GlassSection(
+      rows: [
+        _SettingsRowData(
+          emoji: '👤',
+          label: 'Profile',
+          value: profile?.username ?? '',
+          onTap: profile == null
+              ? null
+              : () async {
+                  final saved = await showEditProfileSheet(
+                    context,
+                    currentUsername: profile.username,
+                  );
+                  if (saved ?? false) ref.invalidate(userProfileProvider);
+                },
+        ),
+        _SettingsRowData(
+          emoji: '📧',
+          label: 'Email',
+          value: profile?.email ?? '',
+          onTap: profile == null
+              ? null
+              : () async {
+                  final saved = await showChangeEmailSheet(
+                    context,
+                    currentEmail: profile.email,
+                  );
+                  if (saved ?? false) ref.invalidate(userProfileProvider);
+                },
+        ),
+        _SettingsRowData(
+          emoji: '🔒',
+          label: 'Password',
+          value: '••••••••',
+          onTap: () => showChangePasswordSheet(context),
+        ),
+      ],
+    );
+  }
+}
+
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel(this.text);
 
@@ -319,10 +426,10 @@ class _SettingsRowData {
   final String? value;
   final Widget? trailing;
   final bool destructive;
+  final VoidCallback? onTap;
 
   /// Якщо задано — замість емодзі малюється цей віджет (для danger-рядків).
   final Widget? iconWidget;
-  final VoidCallback? onTap;
 }
 
 /// Скляна група рядків налаштувань.
