@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "607901324874",
+    "project_id": "peconote-7b134",
+    "storage_bucket": "peconote-7b134.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:607901324874:android:29bd637ba612db8851f8b3",
+        "android_client_info": {
+          "package_name": "com.example.peconote_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0UOVAi5AHll2Z2tTn3wapEfZW5Bb4kQM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:607901324874:android:09aafa1a17584dad51f8b3",
+        "android_client_info": {
+          "package_name": "com.lakomora.peconote_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0UOVAi5AHll2Z2tTn3wapEfZW5Bb4kQM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
