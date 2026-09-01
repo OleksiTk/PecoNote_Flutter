@@ -2,6 +2,9 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+    <!-- Android 13+ requires runtime consent before posting notifications;
+         firebase_messaging's requestPermission() triggers this prompt. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application
         android:label="peconote_mobile"
         android:name="${applicationName}"
@@ -37,6 +40,16 @@
                 <data android:scheme="peconote" android:host="reset-password" />
             </intent-filter>
         </activity>
+        <!-- Channel that background FCM notification messages are posted to.
+             Must match kAndroidNotificationChannel.id in
+             lib/core/notifications/push_service.dart -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="peconote_high_importance" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@mipmap/ic_launcher" />
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/auth/auth_session.dart';
 import '../../../../core/errors/app_failure.dart';
+import '../../../notifications/application/device_token_sync.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../remote/auth_remote_data_source.dart';
 
@@ -9,11 +10,14 @@ class ApiAuthRepository implements AuthRepository {
   const ApiAuthRepository({
     required AuthRemoteDataSource remoteDataSource,
     required AuthSession authSession,
+    required DeviceTokenSync deviceTokenSync,
   }) : _remoteDataSource = remoteDataSource,
-       _authSession = authSession;
+       _authSession = authSession,
+       _deviceTokenSync = deviceTokenSync;
 
   final AuthRemoteDataSource _remoteDataSource;
   final AuthSession _authSession;
+  final DeviceTokenSync _deviceTokenSync;
 
   @override
   Future<void> signIn({required String email, required String password}) async {
@@ -67,11 +71,15 @@ class ApiAuthRepository implements AuthRepository {
       accessToken: accessToken,
       refreshToken: refreshToken,
     );
+    // Best-effort: register this device for push now that we can authenticate.
+    await _deviceTokenSync.register();
   }
 
   @override
   Future<void> signOut() async {
     try {
+      // Remove this device server-side while the session is still valid.
+      await _deviceTokenSync.unregister();
       await _remoteDataSource.logout();
     } on Object {
       // Logout is best-effort until the backend can invalidate login tokens.

@@ -23,11 +23,16 @@ class AuthSession extends ChangeNotifier {
   Future<bool> isAuthenticated() async {
     final accessToken = await _tokenStorage.readAccessToken();
     final refreshToken = await _tokenStorage.readRefreshToken();
-    _authenticated =
+    final authenticated =
         accessToken != null &&
         accessToken.isNotEmpty &&
         refreshToken != null &&
         refreshToken.isNotEmpty;
+    final changed = authenticated != _authenticated;
+    _authenticated = authenticated;
+    // Notify so listeners (router redirect, push registration) react to a
+    // session restored from secure storage, not just to explicit login/logout.
+    if (changed) notifyListeners();
     return _authenticated;
   }
 

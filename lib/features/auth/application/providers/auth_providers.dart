@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/auth/auth_session.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../notifications/application/providers/notification_providers.dart';
 import '../../data/remote/auth_remote_data_source.dart';
 import '../../data/repositories/api_auth_repository.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -16,6 +17,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return ApiAuthRepository(
     remoteDataSource: ref.watch(authRemoteDataSourceProvider),
     authSession: ref.watch(authSessionProvider),
+    deviceTokenSync: ref.watch(deviceTokenSyncProvider),
   );
 });
 
