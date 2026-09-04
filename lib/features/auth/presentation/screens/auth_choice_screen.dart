@@ -8,8 +8,24 @@ import '../../../../shared/widgets/app_buttons.dart';
 import '../../../../shared/widgets/app_logo.dart';
 import '../../../../shared/widgets/gradient_background.dart';
 
-class AuthChoiceScreen extends StatelessWidget {
+class AuthChoiceScreen extends StatefulWidget {
   const AuthChoiceScreen({super.key});
+
+  @override
+  State<AuthChoiceScreen> createState() => _AuthChoiceScreenState();
+}
+
+class _AuthChoiceScreenState extends State<AuthChoiceScreen> {
+  // Held as a field instead of created inline in build(): a fresh
+  // TapGestureRecognizer per rebuild is never disposed and leaks.
+  late final TapGestureRecognizer _signUpTap = TapGestureRecognizer()
+    ..onTap = () => _goToRegister(context);
+
+  @override
+  void dispose() {
+    _signUpTap.dispose();
+    super.dispose();
+  }
 
   void _goToLogin(BuildContext context) {
     context.pushNamed(AppRoute.login.name);
@@ -89,8 +105,7 @@ class AuthChoiceScreen extends StatelessWidget {
                         color: AppColors.accentBlueMuted,
                         fontWeight: FontWeight.bold,
                       ),
-                      recognizer: TapGestureRecognizer()
-                        ..onTap = () => _goToRegister(context),
+                      recognizer: _signUpTap,
                     ),
                   ],
                 ),

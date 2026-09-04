@@ -22,26 +22,44 @@ class GradientBackground extends StatefulWidget {
 class _GradientBackgroundState extends State<GradientBackground>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  late final AppLifecycleListener _lifecycleListener;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(vsync: this, duration: widget.period);
+    // The engine already skips scheduling frames while backgrounded, so this
+    // isn't fixing visible jank — it's explicit belt-and-suspenders so the
+    // ticker doesn't sit "running" (and the controller re-syncs correctly)
+    // across pause/resume instead of relying on that implicit behaviour.
+    _lifecycleListener = AppLifecycleListener(
+      onResume: _syncAnimation,
+      onInactive: () => _controller.stop(),
+      onHide: () => _controller.stop(),
+      onPause: () => _controller.stop(),
+    );
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _syncAnimation();
+  }
+
+  void _syncAnimation() {
+    if (!mounted) return;
     final reduce = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     final isCurrent = ModalRoute.of(context)?.isCurrent ?? true;
+    final isForeground =
+        WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
 
     if (reduce) {
       _controller
         ..stop()
         ..value = 0;
-    } else if (!isCurrent) {
-      // Covered by another route (pushed on top) — no point animating
-      // something nobody can see.
+    } else if (!isCurrent || !isForeground) {
+      // Covered by another route, or the app isn't in the foreground — no
+      // point animating something nobody can see.
       _controller.stop();
     } else if (!_controller.isAnimating) {
       _controller.repeat();
@@ -50,6 +68,7 @@ class _GradientBackgroundState extends State<GradientBackground>
 
   @override
   void dispose() {
+    _lifecycleListener.dispose();
     _controller.dispose();
     super.dispose();
   }

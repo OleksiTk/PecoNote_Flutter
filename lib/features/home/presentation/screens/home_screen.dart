@@ -936,22 +936,27 @@ class _TransactionsSheetState extends State<_TransactionsSheet> {
                                   ),
                                 ),
                               )
-                            : ListView.separated(
+                            : ListView.builder(
                                 padding: const EdgeInsets.fromLTRB(
                                   18,
                                   6,
                                   18,
                                   110,
                                 ),
+                                // Кожен рядок — фіксовані 62px (Padding 9+9
+                                // навколо 44px іконки) + 2px відступ, як
+                                // раніше давав separatorBuilder. itemExtent
+                                // дозволяє ListView одразу порахувати scroll
+                                // extent без прогону layout по всіх рядках.
+                                itemExtent: _TransactionTile.rowExtent,
                                 itemCount: filtered.length,
-                                separatorBuilder: (_, _) =>
-                                    const SizedBox(height: 2),
-                                itemBuilder: (context, index) =>
-                                    _TransactionTile(
-                                      data: filtered[index],
-                                      onDelete: () =>
-                                          onDelete(filtered[index]),
-                                    ),
+                                itemBuilder: (context, index) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 2),
+                                  child: _TransactionTile(
+                                    data: filtered[index],
+                                    onDelete: () => onDelete(filtered[index]),
+                                  ),
+                                ),
                               ),
                       ),
                     ],
@@ -1354,6 +1359,11 @@ class _SearchField extends StatelessWidget {
 
 class _TransactionTile extends ConsumerWidget {
   const _TransactionTile({required this.data, required this.onDelete});
+
+  /// Padding(vertical: 9) + 44px icon (the row's tallest child) + the 2px
+  /// gap the list's itemBuilder adds below each tile — kept in sync with
+  /// the fixed layout below so `itemExtent` matches reality exactly.
+  static const double rowExtent = 9 + 44 + 9 + 2;
 
   final Transaction data;
   final Future<void> Function() onDelete;

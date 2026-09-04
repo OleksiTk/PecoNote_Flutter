@@ -77,11 +77,20 @@ class DeviceTokenSync {
     if (platform == null) return;
 
     if (kDebugMode) {
-      // Handy for testing pushes with curl before the backend exists.
-      debugPrint('FCM device token ($platform): $token');
+      // Masked so a debug/QA log dump can't be replayed to push-notify this
+      // device; grab the full token from a debugger/breakpoint if you need
+      // it for a curl test.
+      debugPrint(
+        'FCM device token registered ($platform): ${_maskToken(token)}',
+      );
     }
     await _remote.registerDevice(token: token, platform: platform);
     _registeredToken = token;
     await _storage.write(key: _lastTokenKey, value: token);
+  }
+
+  static String _maskToken(String token) {
+    if (token.length <= 10) return '***';
+    return '${token.substring(0, 6)}…${token.substring(token.length - 4)}';
   }
 }

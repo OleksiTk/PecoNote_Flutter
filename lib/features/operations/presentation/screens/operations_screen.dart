@@ -575,20 +575,47 @@ class _OperationsSheet extends ConsumerWidget {
                 groups[key]!.add(tx);
               }
 
-              return ListView(
+              // Плоский список рядків (заголовок дня / транзакція / відступ),
+              // щоб ListView.builder міг лінивo будувати лише видимі елементи
+              // замість матеріалізації всіх _TransactionTile одразу — важливо
+              // для акаунтів з великою історією транзакцій.
+              final rows = <Object>[];
+              for (final key in orderedKeys) {
+                rows.add(_DayHeaderRowData(key));
+                rows.addAll(groups[key]!);
+                rows.add(const _RowSpacer());
+              }
+
+              final categoryById = {
+                for (final category in categories ?? const <Category>[])
+                  category.id: category,
+              };
+
+              return ListView.builder(
                 padding: const EdgeInsets.fromLTRB(18, 18, 18, 110),
-                children: [
-                  for (final key in orderedKeys) ...[
-                    _DayHeaderRow(
-                      label: _dayLabel(groups[key]!.first.occurredAt.toLocal()),
-                      total: _dayTotal(groups[key]!),
-                    ),
-                    const SizedBox(height: 4),
-                    for (final tx in groups[key]!)
-                      _TransactionTile(data: tx, category: _categoryFor(tx, categories)),
-                    const SizedBox(height: 14),
-                  ],
-                ],
+                itemCount: rows.length,
+                itemBuilder: (context, index) {
+                  final row = rows[index];
+                  if (row is _DayHeaderRowData) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: _DayHeaderRow(
+                        label: _dayLabel(
+                          groups[row.key]!.first.occurredAt.toLocal(),
+                        ),
+                        total: _dayTotal(groups[row.key]!),
+                      ),
+                    );
+                  }
+                  if (row is _RowSpacer) {
+                    return const SizedBox(height: 14);
+                  }
+                  final tx = row as Transaction;
+                  return _TransactionTile(
+                    data: tx,
+                    category: _categoryFor(tx, categoryById),
+                  );
+                },
               );
             },
             loading: () => const Center(
@@ -613,12 +640,10 @@ class _OperationsSheet extends ConsumerWidget {
     );
   }
 
-  static Category? _categoryFor(Transaction tx, List<Category>? categories) {
-    if (categories == null || tx.tagIds.isEmpty) return null;
+  static Category? _categoryFor(Transaction tx, Map<int, Category> categoryById) {
     for (final tagId in tx.tagIds) {
-      for (final category in categories) {
-        if (category.id == tagId) return category;
-      }
+      final category = categoryById[tagId];
+      if (category != null) return category;
     }
     return null;
   }
@@ -638,6 +663,18 @@ class _OperationsSheet extends ConsumerWidget {
     final sign = total < 0 ? '−' : (total > 0 ? '+' : '');
     return '$sign₴ ${formatCurrencyAmount(total.abs())}';
   }
+}
+
+/// Маркер рядка-заголовка дня у пласкому списку [rows] — несе лише ключ
+/// групи, сам заголовок будується лінивo в itemBuilder.
+class _DayHeaderRowData {
+  const _DayHeaderRowData(this.key);
+  final String key;
+}
+
+/// Маркер відступу між групами днів у пласкому списку [rows].
+class _RowSpacer {
+  const _RowSpacer();
 }
 
 class _DayHeaderRow extends StatelessWidget {
