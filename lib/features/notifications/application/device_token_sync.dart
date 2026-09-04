@@ -76,6 +76,10 @@ class DeviceTokenSync {
     };
     if (platform == null) return;
 
+    if (kDebugMode) {
+      // Handy for testing pushes with curl before the backend exists.
+      debugPrint('FCM device token ($platform): $token');
+    }
     await _remote.registerDevice(token: token, platform: platform);
     _registeredToken = token;
     await _storage.write(key: _lastTokenKey, value: token);

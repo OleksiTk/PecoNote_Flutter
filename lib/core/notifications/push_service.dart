@@ -91,6 +91,13 @@ class PushService {
     if (initialMessage != null) {
       _initialRoute = NotificationRoute.fromData(initialMessage.data);
     }
+
+    if (kDebugMode) {
+      // Print the token on every debug launch so it can be used to send test
+      // pushes with curl before the backend endpoint exists.
+      final token = await currentTokenOrNull();
+      debugPrint('FCM device token: $token');
+    }
   }
 
   Future<void> _initLocalNotifications() async {
