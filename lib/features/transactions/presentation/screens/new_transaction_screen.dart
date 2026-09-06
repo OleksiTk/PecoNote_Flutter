@@ -1,12 +1,18 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../shared/widgets/app_buttons.dart';
 import '../../../../shared/widgets/gradient_background.dart';
 import '../../../accounts/application/providers/accounts_providers.dart';
+import '../../application/providers/transactions_providers.dart';
+import '../../domain/entities/receipt_ocr_result.dart';
 import '../models/transaction_draft.dart';
 
 class NewTransactionScreen extends ConsumerStatefulWidget {
@@ -21,6 +27,8 @@ class _NewTransactionScreenState extends ConsumerState<NewTransactionScreen> {
   TransactionKind _kind = TransactionKind.expense;
   String _whole = '0';
   String? _decimal;
+  bool _scanningReceipt = false;
+  String? _scanError;
 
   bool get _hasAmount => _whole != '0' || (_decimal?.isNotEmpty ?? false);
 
@@ -60,6 +68,67 @@ class _NewTransactionScreenState extends ConsumerState<NewTransactionScreen> {
     } else {
       context.goNamed(AppRoute.home.name);
     }
+  }
+
+  Future<void> _scanReceipt() async {
+    final photo = await ImagePicker().pickImage(
+      source: ImageSource.camera,
+      imageQuality: 85,
+    );
+    if (photo == null) return;
+
+    setState(() {
+      _scanningReceipt = true;
+      _scanError = null;
+    });
+    try {
+      final dataSource = ref.read(receiptOcrRemoteDataSourceProvider);
+      final json = await dataSource.extract(File(photo.path));
+      final result = ReceiptOcrResult.fromJson(json);
+
+      if (result.amount != null && result.amount! > 0) {
+        final fixed = result.amount!.toStringAsFixed(2);
+        final dotIndex = fixed.indexOf('.');
+        setState(() {
+          _whole = fixed.substring(0, dotIndex);
+          _decimal = fixed.substring(dotIndex + 1);
+        });
+      }
+
+      if (!mounted) return;
+      final accounts = ref.read(accountsProvider).value ?? const [];
+      final account = accounts.isEmpty ? null : accounts.first;
+      context.pushNamed(
+        AppRoute.transactionDetails.name,
+        extra: TransactionDraft(
+          kind: TransactionKind.expense,
+          wholeAmount: _whole,
+          decimalAmount: (_decimal ?? '').padRight(2, '0'),
+          accountLabel: account?.name ?? 'No account yet',
+          accountId: account?.id,
+          initialNote: result.merchantName,
+          initialDate: result.date,
+        ),
+      );
+    } on DioException catch (error) {
+      setState(() => _scanError = _scanErrorMessage(error));
+    } catch (_) {
+      setState(
+        () => _scanError =
+            'Could not read this receipt. Try again or enter it manually.',
+      );
+    } finally {
+      if (mounted) setState(() => _scanningReceipt = false);
+    }
+  }
+
+  String _scanErrorMessage(DioException error) {
+    final status = error.response?.statusCode;
+    if (status == 503) return 'Receipt scanning is not available right now.';
+    if (status == 502) {
+      return 'Could not read this receipt. Try entering it manually.';
+    }
+    return 'Could not scan the receipt. Check your connection and try again.';
   }
 
   void _next() {
@@ -164,6 +233,45 @@ class _NewTransactionScreenState extends ConsumerState<NewTransactionScreen> {
                   onChanged: (kind) => setState(() => _kind = kind),
                 ),
               ),
+              if (_kind == TransactionKind.expense) ...[
+                const SizedBox(height: 14),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: PillButton(
+                    label: _scanningReceipt ? 'Scanning…' : 'Scan a receipt',
+                    leading: _scanningReceipt
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.accentBlue,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.camera_alt_outlined,
+                            size: 18,
+                            color: AppColors.accentBlue,
+                          ),
+                    onPressed: _scanningReceipt ? null : _scanReceipt,
+                    backgroundColor: AppColors.white,
+                    foregroundColor: AppColors.accentBlue,
+                    borderColor: AppColors.white,
+                  ),
+                ),
+                if (_scanError != null)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                    child: Text(
+                      _scanError!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: AppColors.error,
+                        fontSize: 12.5,
+                      ),
+                    ),
+                  ),
+              ],
               const SizedBox(height: 34),
               const Text(
                 'AMOUNT',

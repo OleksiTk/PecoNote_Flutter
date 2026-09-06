@@ -26,12 +26,22 @@ class TransactionDraft {
     required this.decimalAmount,
     required this.accountLabel,
     this.accountId,
+    this.initialNote,
+    this.initialDate,
   });
 
   final TransactionKind kind;
   final String wholeAmount;
   final String decimalAmount;
   final String accountLabel;
+
+  /// Заповнюється лише коли драфт створено зі сканування чеку (назва
+  /// продавця з OCR) — крок 2 підставляє це як стартове значення Note.
+  final String? initialNote;
+
+  /// Заповнюється лише коли драфт створено зі сканування чеку (дата чеку
+  /// з OCR) — крок 2 підставляє це як стартове значення Date.
+  final DateTime? initialDate;
 
   /// Null, коли на кроці 1 ще немає жодного реального рахунку (створеного
   /// через /accounts/) — тоді крок 2 не може зберегти транзакцію.

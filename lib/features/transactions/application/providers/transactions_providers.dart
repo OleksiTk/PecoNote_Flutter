@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../accounts/application/providers/accounts_providers.dart';
+import '../../data/remote/receipt_ocr_remote_data_source.dart';
 import '../../data/remote/transactions_remote_data_source.dart';
 import '../../data/repositories/api_transactions_repository.dart';
 import '../../domain/entities/transaction.dart';
@@ -10,6 +11,11 @@ import '../../domain/repositories/transactions_repository.dart';
 final transactionsRemoteDataSourceProvider =
     Provider<TransactionsRemoteDataSource>((ref) {
       return TransactionsRemoteDataSource(ref.watch(dioProvider));
+    });
+
+final receiptOcrRemoteDataSourceProvider =
+    Provider<ReceiptOcrRemoteDataSource>((ref) {
+      return ReceiptOcrRemoteDataSource(ref.watch(dioProvider));
     });
 
 final transactionsRepositoryProvider = Provider<TransactionsRepository>((ref) {

@@ -63,8 +63,8 @@ class TransactionDetailsScreen extends ConsumerStatefulWidget {
 class _TransactionDetailsScreenState
     extends ConsumerState<TransactionDetailsScreen> {
   int? _selectedCategoryId;
-  DateTime _date = DateTime.now();
-  String? _note;
+  late DateTime _date = widget.draft.initialDate ?? DateTime.now();
+  late String? _note = widget.draft.initialNote;
   bool _repeatsMonthly = false;
   bool _accountsSwapped = false;
   bool _saving = false;

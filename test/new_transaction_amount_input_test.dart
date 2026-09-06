@@ -30,8 +30,10 @@ void main() {
     expect(amountField().controller.selection.extentOffset, 1);
     expect(find.text('.00'), findsOneWidget);
 
+    await tester.ensureVisible(find.text('1'));
     await tester.tap(find.text('1'));
     await tester.pump();
+    await tester.ensureVisible(find.text('2'));
     await tester.tap(find.text('2'));
     await tester.pump();
 
@@ -39,6 +41,7 @@ void main() {
     expect(amountField().controller.selection.extentOffset, 2);
     expect(find.text('.00'), findsOneWidget);
 
+    await tester.ensureVisible(find.text(','));
     await tester.tap(find.text(','));
     await tester.pump();
 
@@ -46,6 +49,7 @@ void main() {
     expect(amountField().controller.selection.extentOffset, 3);
     expect(find.text('00'), findsOneWidget);
 
+    await tester.ensureVisible(find.text('5'));
     await tester.tap(find.text('5'));
     await tester.pump();
 

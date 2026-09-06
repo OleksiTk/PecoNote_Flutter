@@ -11,7 +11,7 @@
 	<key>FirebaseAppDelegateProxyEnabled</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>PecoNote needs camera access to scan the QR code from your Monobank app.</string>
+	<string>PecoNote needs camera access to scan QR codes and photograph receipts.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
